@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="description" content="Hero Academy — a math and reading practice game for young learners.">
-<title>Hero Academy</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23FF8A3D'/%3E%3Cpath d='M32 14l5.5 11.2 12.4 1.8-9 8.7 2.1 12.3L32 42.2 21 48l2.1-12.3-9-8.7 12.4-1.8z' fill='%23fff'/%3E%3C/svg%3E">
+<meta name="description" content="Dr Sam's Academy: a math and reading practice game for young learners.">
+<title>Dr Sam's Academy</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4l24 8v18c0 15-10.5 24-24 30C18.5 54 8 45 8 30V12z' fill='%232F6BFF'/%3E%3Cpath d='M36 14L22 34h8l-4 16 16-22h-8z' fill='%23F5B02E'/%3E%3C/svg%3E">
 <style>
   :root{
-    --ground:#FFF9F0; --card:#FFFFFF; --line:#F0E7D8;
-    --ink:#3D3229; --ink2:#8A7D6F;
-    --coral:#FF8A3D; --coral-dark:#E5721F; --coral-tint:#FFF0E2;
-    --math:#2D7FF0; --math-tint:#E4EEFF;
+    --ground:#EFF5FF; --card:#FFFFFF; --line:#D9E4F7;
+    --ink:#1B2A4A; --ink2:#6B7C9C;
+    --coral:#2F6BFF; --coral-dark:#1E4FD6; --coral-tint:#E1EAFF;
+    --math:#0E9BD8; --math-tint:#E0F3FC;
     --read:#8C56D9; --read-tint:#F0E8FB;
     --gold:#F5B02E; --gold-tint:#FDF3DC;
-    --ok:#4DB271; --ok-tint:#E7F6EC;
-    --no:#E4573D; --no-tint:#FDEAE6;
+    --ok:#22B573; --ok-tint:#E4F8EE;
+    --no:#E8484D; --no-tint:#FDE9EA;
     --r-card:20px; --r-btn:16px;
-    --shadow:0 2px 8px rgba(61,50,41,.08);
-    --shadow-lift:0 6px 18px rgba(61,50,41,.12);
+    --shadow:0 2px 8px rgba(27,42,74,.08);
+    --shadow-lift:0 6px 18px rgba(27,42,74,.14);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
@@ -306,6 +306,16 @@
   .center-card h2{font-size:24px;margin:10px 0 6px;}
   .center-card p{color:var(--ink2);font-weight:700;font-size:16px;margin:0 0 14px;}
   .hold-btn{position:relative;overflow:hidden;}
+  .name-input{
+    width:100%;padding:15px;border:2.5px solid var(--line);border-radius:16px;
+    font-family:inherit;font-size:22px;font-weight:800;color:var(--ink);text-align:center;
+    background:var(--ground);margin:4px 0 10px;
+  }
+  .name-input:focus{outline:none;border-color:var(--coral);}
+  .pow{position:fixed;z-index:98;pointer-events:none;animation:powPop .7s ease-out forwards;}
+  @keyframes powPop{0%{transform:scale(.2) rotate(-14deg);opacity:0}30%{transform:scale(1.2) rotate(5deg);opacity:1}75%{transform:scale(1) rotate(0);opacity:1}100%{transform:scale(1.05);opacity:0}}
+  .powerbar{height:9px;background:var(--card);border:1.5px solid var(--line);border-radius:99px;overflow:hidden;margin:-4px 0 12px;}
+  .powerbar>div{height:100%;width:0%;background:linear-gradient(90deg,var(--coral),var(--gold));border-radius:99px;transition:width .5s ease;}
   .hold-btn .fillup{position:absolute;inset:0;background:rgba(255,255,255,.35);width:0%;transition:none;}
 
   /* ---------- ceremonies ---------- */
@@ -376,8 +386,8 @@
   <div class="screen active" id="scr-home">
     <div class="home-head">
       <div class="mascot-box" id="homeMascot"></div>
-      <h1>Hero Academy</h1>
-      <p class="subtle" id="homeGreet">Hi, Samuel. Ready to train?</p>
+      <h1 id="homeTitle">Dr Sam&#8217;s Academy</h1>
+      <p class="subtle" id="homeGreet">Ready to train, hero?</p>
     </div>
     <div class="streak-line" id="streakLine"></div>
     <div class="week-strip" id="weekStrip"></div>
@@ -387,6 +397,17 @@
       <h3><svg class="icon" style="color:var(--coral)"><use href="#i-chest"/></svg>Today's three</h3>
       <div id="goalList"></div>
       <div class="chest-note" id="chestNote"></div>
+    </div>
+  </div>
+
+  <!-- NAME -->
+  <div class="screen" id="scr-name">
+    <div class="center-card">
+      <span id="nameMascot"></span>
+      <h2>Welcome to Dr Sam&#8217;s Academy</h2>
+      <p>Every hero has a name. What is yours?</p>
+      <input class="name-input" id="nameInput" maxlength="14" autocomplete="off" placeholder="Type your name" aria-label="Type your name">
+      <button class="btn btn-primary" id="nameGo">Start my training</button>
     </div>
   </div>
 
@@ -406,8 +427,9 @@
       <div class="pips" id="pips"></div>
       <div class="bosshp" id="bossHp" style="display:none"></div>
     </div>
+    <div class="powerbar" id="powerbar"><div id="powerFill"></div></div>
     <div class="qcard" id="qcard">
-      <div class="golden-tag"><svg class="icon fill" style="width:14px;height:14px"><use href="#i-star"/></svg>Golden question — triple coins</div>
+      <div class="golden-tag"><svg class="icon fill" style="width:14px;height:14px"><use href="#i-star"/></svg>Golden question! Triple coins</div>
       <div class="wtag" id="worldTag"></div>
       <div class="qtext" id="qtext"></div>
       <div class="qvisual" id="qvisual"></div>
@@ -476,7 +498,7 @@
     <div class="center-card">
       <span id="rechargeMascot"></span>
       <h2>Hero recharge</h2>
-      <p>You trained hard today. Rest makes heroes stronger — your stars and cards are saved for tomorrow.</p>
+      <p>You trained hard today. Rest makes heroes stronger. Your stars and cards are saved for tomorrow.</p>
       <button class="btn btn-primary" id="rechargeHome">Done for today</button>
       <button class="btn btn-quiet hold-btn" id="holdContinue" aria-label="Grown-ups: press and hold to keep playing"><span class="fillup" id="holdFill"></span>Grown-ups: hold to keep playing</button>
     </div>
@@ -541,7 +563,7 @@ function numChoices(correct,wrongsPref,min,max){
 const RANKS=[[0,'Rookie'],[150,'Sidekick'],[400,'Hero'],[800,'Super Hero'],[1400,'Mega Hero'],[2200,'Legend']];
 const SAVE_KEY='heroAcademy_v2';
 let S={
-  avatar:'blaze', unlockedAv:['blaze','bolt'],
+  player:'', avatar:'webz', unlockedAv:['webz','dash'],
   coins:0, xp:0, bestStreak:0,
   stars:{}, badges:{}, crowns:{}, levels:{}, perWorld:{},
   cards:{}, muted:false, tab:'math',
@@ -625,49 +647,64 @@ function hushed(){speakSeq++;if('speechSynthesis' in window)speechSynthesis.canc
 
 /* ============ artwork (all inline SVG) ============ */
 const AV_DEFS={
-  blaze:{name:'Blaze',skin:'#C68642',cape:'#FF8A3D',accent:'#F5B02E',price:0},
-  bolt:{name:'Bolt',skin:'#8D5524',cape:'#2D7FF0',accent:'#FFD666',price:0},
-  nova:{name:'Nova',skin:'#E0AC69',cape:'#8C56D9',accent:'#FF8A3D',price:60},
-  ace:{name:'Ace',skin:'#C68642',cape:'#4DB271',accent:'#2D7FF0',price:100},
-  comet:{name:'Comet',skin:'#8D5524',cape:'#E4573D',accent:'#F5B02E',price:150},
-  max:{name:'Max',skin:'#E0AC69',cape:'#3D3229',accent:'#F5B02E',price:250}
+  webz:{name:'Webz',suit:'#E8484D',trim:'#1B2A4A',emblem:'web',price:0},
+  dash:{name:'Dash',suit:'#2F6BFF',trim:'#1E4FD6',emblem:'bolt',price:0},
+  nova:{name:'Nova',suit:'#8C56D9',trim:'#6B3AB0',emblem:'star',price:60},
+  tank:{name:'Tank',suit:'#22B573',trim:'#178A55',emblem:'shield',price:100},
+  blaze:{name:'Blaze',suit:'#F5B02E',trim:'#D4941A',emblem:'flame',price:150},
+  shadow:{name:'Shadow',suit:'#1B2A4A',trim:'#0E1830',emblem:'moon',price:250}
 };
+function emblemSVG(kind,color){
+  const m={
+    bolt:`<path d="M42 56l-6 10h4l-3 8 8-11h-4z" fill="${color}"/>`,
+    star:`<path d="M40 55l2.4 4.8 5.3.8-3.8 3.7.9 5.2-4.8-2.5-4.8 2.5.9-5.2-3.8-3.7 5.3-.8z" fill="${color}"/>`,
+    web:`<g stroke="${color}" stroke-width="1.8" fill="none"><circle cx="40" cy="63" r="7"/><circle cx="40" cy="63" r="3.5"/><path d="M33 63h14M40 56v14M35 58l10 10M45 58l-10 10"/></g>`,
+    shield:`<path d="M40 55l7 2.5v5c0 4.5-3 7.5-7 9.5-4-2-7-5-7-9.5v-5z" fill="${color}"/>`,
+    flame:`<path d="M40 55c4 4 6 7 6 10a6 6 0 01-12 0c0-3 2-4 3-7 1 2 3 2 3-3z" fill="${color}"/>`,
+    moon:`<path d="M44 56a8 8 0 10.5 15 6.5 6.5 0 01-.5-15z" fill="${color}"/>`
+  };
+  return m[kind]||'';
+}
 function avatarSVG(id,size){
-  const a=AV_DEFS[id]||AV_DEFS.blaze;
+  const a=AV_DEFS[id]||AV_DEFS.webz;
+  const webLines=a.emblem==='web'?`<g stroke="${a.trim}" stroke-width="1.4" fill="none" opacity=".7">
+      <path d="M19 28 Q40 18 61 28"/><path d="M19 36 Q40 27 61 36"/>
+      <path d="M28 14 L26 40"/><path d="M40 12 L40 42"/><path d="M52 14 L54 40"/></g>`:'';
   return `<svg viewBox="0 0 80 80" width="${size||56}" height="${size||56}" aria-hidden="true">
-    <path d="M40 46 L18 72 Q40 64 62 72 Z" fill="${a.cape}"/>
-    <circle cx="40" cy="34" r="22" fill="${a.skin}"/>
-    <path d="M18 30 Q40 6 62 30 L62 26 Q40 2 18 26 Z" fill="${a.cape}"/>
-    <rect x="24" y="27" width="32" height="10" rx="5" fill="${a.cape}"/>
-    <circle cx="33" cy="32" r="3.4" fill="#fff"/><circle cx="47" cy="32" r="3.4" fill="#fff"/>
-    <circle cx="33" cy="32" r="1.7" fill="#3D3229"/><circle cx="47" cy="32" r="1.7" fill="#3D3229"/>
-    <path d="M33 44 Q40 50 47 44" stroke="#3D3229" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-    <path d="M40 12 l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z" fill="${a.accent}"/>
+    <path d="M40 44 L16 74 Q40 65 64 74 Z" fill="${a.trim}"/>
+    <circle cx="40" cy="32" r="22" fill="${a.suit}"/>
+    ${webLines}
+    <path d="M26 30 q7 -6 10 1 q1.5 4 -2 6 q-6 2 -8 -7z" fill="#fff" stroke="${a.trim}" stroke-width="1.6"/>
+    <path d="M54 30 q-7 -6 -10 1 q-1.5 4 2 6 q6 2 8 -7z" fill="#fff" stroke="${a.trim}" stroke-width="1.6"/>
+    <circle cx="33.5" cy="32" r="2" fill="#1B2A4A"/><circle cx="46.5" cy="32" r="2" fill="#1B2A4A"/>
+    <path d="M34 44 Q40 48.5 46 44" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".9"/>
+    ${emblemSVG(a.emblem,'#fff')}
   </svg>`;
 }
 function mascotSVG(mood,size){
   const m=mood||'idle';
-  const eyes=m==='cheer'?`<path d="M30 34 q4 -5 8 0" stroke="#3D3229" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M52 34 q4 -5 8 0" stroke="#3D3229" stroke-width="3" fill="none" stroke-linecap="round"/>`
-    :m==='sleepy'?`<path d="M30 36 h8" stroke="#3D3229" stroke-width="3" stroke-linecap="round"/><path d="M52 36 h8" stroke="#3D3229" stroke-width="3" stroke-linecap="round"/>`
-    :`<circle cx="34" cy="34" r="3.6" fill="#3D3229"/><circle cx="56" cy="34" r="3.6" fill="#3D3229"/>`;
-  const mouth=m==='cheer'?`<path d="M36 48 Q45 58 54 48" stroke="#3D3229" stroke-width="3.2" fill="none" stroke-linecap="round"/>`
-    :m==='think'?`<circle cx="45" cy="50" r="3" fill="#3D3229"/>`
-    :m==='sleepy'?`<circle cx="45" cy="51" r="4" fill="#3D3229" opacity=".85"/>`
-    :`<path d="M38 48 Q45 54 52 48" stroke="#3D3229" stroke-width="3" fill="none" stroke-linecap="round"/>`;
-  const extra=m==='cheer'?`<path d="M12 20 l4 -8 M78 20 l-4 -8" stroke="#F5B02E" stroke-width="4" stroke-linecap="round"/>`
-    :m==='sleepy'?`<text x="70" y="18" font-size="14" font-weight="800" fill="#8A7D6F">z z</text>`:'';
+  const eyes=m==='cheer'?`<path d="M29 34 q5 -6 10 0" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M51 34 q5 -6 10 0" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round"/>`
+    :m==='sleepy'?`<path d="M30 35 h8" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M52 35 h8" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`
+    :`<circle cx="34" cy="34" r="5" fill="#fff"/><circle cx="56" cy="34" r="5" fill="#fff"/><circle cx="34.5" cy="34.5" r="2.4" fill="#1B2A4A"/><circle cx="56.5" cy="34.5" r="2.4" fill="#1B2A4A"/>`;
+  const mouth=m==='cheer'?`<path d="M36 50 Q45 60 54 50" stroke="#1B2A4A" stroke-width="3.2" fill="none" stroke-linecap="round"/>`
+    :m==='think'?`<circle cx="45" cy="52" r="3" fill="#1B2A4A"/>`
+    :m==='sleepy'?`<circle cx="45" cy="53" r="4" fill="#1B2A4A" opacity=".8"/>`
+    :`<path d="M38 50 Q45 56 52 50" stroke="#1B2A4A" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  const extra=m==='cheer'?`<path d="M10 18 l5 -9 M80 18 l-5 -9 M45 6 v-5" stroke="#F5B02E" stroke-width="4" stroke-linecap="round"/>`
+    :m==='sleepy'?`<text x="70" y="16" font-size="14" font-weight="800" fill="#6B7C9C">z z</text>`:'';
   return `<svg viewBox="0 0 90 90" width="${size||90}" height="${size||90}" aria-hidden="true">
     ${extra}
-    <path d="M20 26 L12 8 L32 16 Z" fill="#E5721F"/><path d="M70 26 L78 8 L58 16 Z" fill="#E5721F"/>
-    <path d="M22 24 L16 12 L30 18 Z" fill="#FFF0E2"/><path d="M68 24 L74 12 L60 18 Z" fill="#FFF0E2"/>
-    <circle cx="45" cy="42" r="30" fill="#FF8A3D"/>
-    <path d="M25 50 a20 16 0 0040 0 q-10 12 -20 12 t-20 -12z" fill="#FFF6EC"/>
+    <path d="M45 60 L28 86 Q45 78 62 86 Z" fill="#F5B02E"/>
+    <path d="M20 26 L12 8 L32 16 Z" fill="#1E4FD6"/><path d="M70 26 L78 8 L58 16 Z" fill="#1E4FD6"/>
+    <path d="M22 24 L16 12 L30 18 Z" fill="#DCE7FF"/><path d="M68 24 L74 12 L60 18 Z" fill="#DCE7FF"/>
+    <circle cx="45" cy="42" r="30" fill="#2F6BFF"/>
+    <path d="M25 50 a20 16 0 0040 0 q-10 12 -20 12 t-20 -12z" fill="#EAF1FF"/>
+    <path d="M17 26 q28 -12 56 0 l0 16 q-28 8 -56 0z" fill="#1E4FD6"/>
     ${eyes}${mouth}
-    <path d="M45 74 q-14 8 -22 4 q4 -10 12 -12" fill="#E5721F"/>
   </svg>`;
 }
 function worldArt(id){
-  const P={m:'#2D7FF0',mt:'#E4EEFF',r:'#8C56D9',rt:'#F0E8FB',g:'#F5B02E',c:'#FF8A3D',k:'#3D3229'};
+  const P={m:'#0E9BD8',mt:'#E0F3FC',r:'#8C56D9',rt:'#F0E8FB',g:'#F5B02E',c:'#2F6BFF',k:'#1B2A4A'};
   const arts={
     num:`<rect x="8" y="26" width="14" height="26" rx="2" fill="${P.m}"/><rect x="26" y="14" width="14" height="38" rx="2" fill="${P.mt}" stroke="${P.m}" stroke-width="2"/><rect x="44" y="20" width="14" height="32" rx="2" fill="${P.m}"/><text x="33" y="38" font-size="16" font-weight="800" fill="${P.m}" text-anchor="middle">3</text><circle cx="15" cy="20" r="5" fill="${P.g}"/>`,
     ops:`<circle cx="22" cy="32" r="16" fill="${P.mt}" stroke="${P.m}" stroke-width="2.5"/><path d="M22 24v16M14 32h16" stroke="${P.m}" stroke-width="4" stroke-linecap="round"/><circle cx="46" cy="32" r="13" fill="${P.m}"/><path d="M39 32h14" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`,
@@ -685,6 +722,24 @@ function worldArt(id){
 }
 function starSVG(filled,color){
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1L3.2 9.4l6.1-.9z" fill="${filled?(color||'#F5B02E'):'none'}" stroke="${filled?(color||'#F5B02E'):'#D8CDBB'}" stroke-width="2" stroke-linejoin="round"/></svg>`;
+}
+
+/* ============ comic burst ============ */
+const POW_WORDS=['POW!','ZAP!','WOW!','BAM!','YES!','BOOM!'];
+function powBurst(){
+  if(reduceMotion)return;
+  const card=document.getElementById('qcard');
+  const r=card?card.getBoundingClientRect():{left:60,top:160,width:240,height:200};
+  const d=document.createElement('div');
+  d.className='pow';
+  const w=POW_WORDS[rint(0,POW_WORDS.length-1)];
+  d.innerHTML=`<svg width="120" height="120" viewBox="0 0 120 120">
+    <path d="M60 4l9 18 20-9-6 21 22 3-16 15 16 15-22 3 6 21-20-9-9 18-9-18-20 9 6-21-22-3 16-15-16-15 22-3-6-21 20 9z" fill="#F5B02E" stroke="#1B2A4A" stroke-width="3" stroke-linejoin="round"/>
+    <text x="60" y="68" text-anchor="middle" font-size="26" font-weight="900" fill="#E8484D" font-family="inherit">${w}</text></svg>`;
+  d.style.left=(r.left+r.width*0.5-60+rint(-40,40))+'px';
+  d.style.top=(r.top+rint(10,60))+'px';
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(),720);
 }
 
 /* ============ confetti (SVG bits, brand colors) ============ */
@@ -838,7 +893,7 @@ function genPattern(L){
   }
   const t=rint(1,3);
   if(t===1){const add=pick([3,4,5]);const x=rint(1,4),y=rint(5,7);
-    return q(`The machine adds ${add}. Put in ${x}, out comes ${x+add}. Put in ${y} — what comes out?`,'',
+    return q(`The machine adds ${add}. Put in ${x}, out comes ${x+add}. Put in ${y}. What comes out?`,'',
       numChoices(y+add,[y+add-1,y+add+1,y],2,20),`The machine always adds ${add}.`,`The machine adds ${add}. If ${y} goes in, what comes out?`);}
   if(t===2){const s=rint(6,12)*5;
     return q(`${s}, ${s-5}, ${s-10}, what comes next?`,'',
@@ -1144,7 +1199,7 @@ function genPhonics(L){
     const t=rint(1,3);
     if(t===1){const [w,e,wr]=pick(CVC);
       return q('Which word matches the picture?',`<span style="font-size:48px">${e}</span>`,
-        choicesFrom(w,wr),`Sound it out: ${w.split('').join(', ')} — ${w}.`,'Which word matches the picture?');}
+        choicesFrom(w,wr),`Sound it out: ${w.split('').join(', ')}. That makes ${w}.`,'Which word matches the picture?');}
     if(t===2){const [dg,word,wrongs]=pick(DIGRAPHS);
       return q(`Which word starts with the “${dg}” sound?`,'',
         choicesFrom(word,wrongs),`${cap(word)} starts with ${dg}.`,`Which word starts with the ${dg} sound?`);}
@@ -1282,7 +1337,7 @@ function markPlayedToday(){
   const yest=new Date(Date.now()-86400000);
   const yStr=yest.getFullYear()+'-'+String(yest.getMonth()+1).padStart(2,'0')+'-'+String(yest.getDate()).padStart(2,'0');
   if(S.lastPlay===yStr){S.streakDays++;}
-  else if(S.lastPlay){ // missed at least a day — one shield per week
+  else if(S.lastPlay){ // missed at least a day: one shield per week
     const wk=t.slice(0,8);
     if(S.shieldWeek!==wk&&S.streakDays>0){S.shieldWeek=wk;}
     else S.streakDays=1;
@@ -1296,8 +1351,8 @@ let M=null;
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
-  $('topbar').style.display=id==='scr-home'?'none':'flex';
-  document.body.classList.toggle('in-quiz',id==='scr-quiz'||id==='scr-break'||id==='scr-recharge');
+  $('topbar').style.display=(id==='scr-home'||id==='scr-name')?'none':'flex';
+  document.body.classList.toggle('in-quiz',id==='scr-quiz'||id==='scr-break'||id==='scr-recharge'||id==='scr-name');
   document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
   const map={'scr-home':'navHome','scr-map':'navMap','scr-stuff':'navStuff','scr-parent':'navParent'};
   if(map[id])$(map[id]).classList.add('active');
@@ -1320,7 +1375,8 @@ function renderHome(){
   const hour=new Date().getHours();
   const mood=hour<7||hour>=20?'sleepy':(S.daily.chest?'cheer':'idle');
   $('homeMascot').innerHTML=mascotSVG(mood,150);
-  $('homeGreet').textContent=hour<12?'Good morning, Samuel.':hour<17?'Hi, Samuel. Ready to train?':'Good evening, Samuel.';
+  const nm=S.player||'hero';
+  $('homeGreet').textContent=hour<12?`Good morning, ${nm}!`:hour<17?`Ready to train, ${nm}?`:`Good evening, ${nm}!`;
   $('streakLine').textContent=S.streakDays>1?`${S.streakDays} days in a row`:(S.streakDays===1?'You trained today':'Start your streak today');
   const days=['S','M','T','W','T','F','S'];
   const now=new Date();const dow=now.getDay();
@@ -1347,7 +1403,7 @@ function renderHome(){
     gl.innerHTML+=`<div class="goal-row ${done?'done':''}"><span class="goal-check">${done?'<svg class="icon" style="width:15px;height:15px;stroke-width:3.5"><use href="#i-check"/></svg>':''}</span>${nm}</div>`;
   });
   $('chestNote').innerHTML=S.daily.chest
-    ?'<svg class="icon" style="width:18px;height:18px;color:var(--gold)"><use href="#i-chest"/></svg> Chest opened — see you tomorrow'
+    ?'<svg class="icon" style="width:18px;height:18px;color:var(--gold)"><use href="#i-chest"/></svg> Chest opened! See you tomorrow'
     :'<svg class="icon" style="width:18px;height:18px;color:var(--ink2)"><use href="#i-chest"/></svg> Finish all three to open the daily chest';
 }
 
@@ -1396,6 +1452,8 @@ function startMission(worldId,boss){
   M={worldId,boss:!!boss,idx:0,right:0,hits:0,asked:0,hi:0,
      wstreak:{},wwrong:{},picked:null,phase:'pick',timer:null,t0:now,golden:false};
   show('scr-quiz');
+  $('powerFill').style.width='0%';
+  $('powerbar').style.display=boss?'none':'block';
   $('bossHp').style.display=boss?'flex':'none';
   document.querySelector('.pips').style.display=boss?'none':'flex';
   if(boss){
@@ -1436,7 +1494,7 @@ function nextQuestion(){
   M.q=Q;M.phase='pick';M.picked=null;
   M.golden=!M.boss&&Math.random()<.12;
   $('qcard').classList.toggle('golden',M.golden);
-  $('worldTag').textContent=M.boss?`${w.name} — boss ${BOSSES[w.id]||''}`:`${w.name} · step ${L} of 3`;
+  $('worldTag').textContent=M.boss?`${w.name} boss battle ${BOSSES[w.id]||''}`:`${w.name} · step ${L} of 3`;
   renderPips();if(M.boss)renderBossHp();
   $('qtext').innerHTML=Q.text;
   $('qvisual').innerHTML=Q.visual||'';
@@ -1503,10 +1561,13 @@ function checkAnswer(){
     if(M.boss){M.hits++;renderBossHp();sfx.hit();
       $('qcard').style.animation='hitFlash .4s';setTimeout(()=>{$('qcard').style.animation='';},420);}
     else sfx.correct();
-    const p=pick(PRAISE);
+    powBurst();
+    $('powerFill').style.width=Math.round(M.right/QPM*100)+'%';
+    let p=pick(PRAISE);
+    if(S.player&&Math.random()<.35)p=pick(['Way to go, ','Super work, ','Hero move, ','Unstoppable, '])+S.player+'!';
     $('coachArt').innerHTML=mascotSVG('cheer',44);
     $('coachMsg').style.display='block';
-    $('coachMsg').textContent=p+(M.golden?` Golden question — ${coin} coins.`:'');
+    $('coachMsg').textContent=p+(M.golden?` Golden question! ${coin} coins.`:'');
     speak(p);
     if(!M.boss&&M.wstreak[w.id]>=3&&S.levels[w.id]<3){
       S.levels[w.id]++;M.wstreak[w.id]=0;
@@ -1567,7 +1628,7 @@ function endMission(){
       if(stars>(S.stars[worldId]||0))S.stars[worldId]=stars;
       if(stars===3)S.badges[worldId]=true;
     }
-    title=stars===3?'All three stars':stars===2?'Two stars — solid work':stars===1?'One star earned':'Good practicing';
+    title=stars===3?'All three stars':stars===2?'Two stars. Solid work':stars===1?'One star earned':'Good practicing';
     sub=`${right} out of ${QPM} right`;
     S.xp+=20;
   }else{
@@ -1602,6 +1663,7 @@ function endMission(){
   $('resSub').textContent=sub;
   const chips=$('resChips');chips.innerHTML='';
   chips.innerHTML+=`<span class="chip"><svg class="icon" style="color:var(--gold)"><use href="#i-coin"/></svg>+${right*(1)} coins</span>`;
+  if(!boss&&right>=6){S.coins+=5;chips.innerHTML+=`<span class="chip"><svg class="icon" style="color:var(--coral)"><use href="#i-bolt"/></svg>Power surge +5</span>`;}
   if(chestJustDone)chips.innerHTML+=`<span class="chip"><svg class="icon" style="color:var(--gold)"><use href="#i-chest"/></svg>Daily chest open</span>`;
   $('packBtn').style.display=pendingPack?'flex':'none';
   // rank check
@@ -1619,7 +1681,7 @@ function endMission(){
   }
   if((stars>=2)||won){confetti(26);}
   speak(boss?(won?'You beat the boss. The crown is yours.':'The boss got away this time. You can try again any day.')
-    :`${title}. You got ${right} out of ${QPM}.`);
+    :`${title}${S.player?', '+S.player:''}. You got ${right} out of ${QPM}.`);
   if(won||stars>=2)setTimeout(()=>{},0);
   runCeremonies(()=>maybePause());
   $('againBtn').onclick=()=>startMission(worldId,boss);
@@ -1713,16 +1775,18 @@ function renderParent(){
     if(top===0)return;
     rows+=`<div class="pstat"><span>${w.name} <span class="lv">step ${top} of 3${top===3?' (2nd-grade stretch)':top===2?' (1st grade)':' (kindergarten)'}</span></span><b>${pw[top].r}/${pw[top].a} at that step</b></div>`;
   });
-  st.innerHTML=rows||'<p class="parent-note">No rounds played yet.</p>';
+  st.innerHTML=(rows||'<p class="parent-note">No rounds played yet.</p>')+
+    '<button class="btn btn-quiet" id="renameBtn" style="margin-top:12px">Change student name</button>';
+  $('renameBtn').onclick=()=>{$('nameInput').value=S.player||'';$('nameMascot').innerHTML=mascotSVG('cheer',120);show('scr-name');};
   $('parentInfo').innerHTML=`
     <h3><svg class="icon"><use href="#i-shield"/></svg>About this practice</h3>
-    <p>This game practices the same skill areas as the i-Ready Diagnostic, which Gwinnett County schools give three times a year: number sense, addition and subtraction, patterns, shapes, and measurement in math; sounds, phonics, sight words, vocabulary, and comprehension in reading. Questions are read aloud, and each world steps up or down in difficulty as Samuel answers — step 1 is roughly kindergarten, step 2 first grade, step 3 a second-grade stretch.</p>
-    <p><strong>Being honest about the gifted process:</strong> strong screener scores can help start a referral, and referrals can also come from a teacher or from you directly. Eligibility in Georgia then requires a separate mental-ability test score at the 96th percentile plus qualifying scores in achievement, creativity, and motivation. This app practices the achievement piece only — no app can promise a placement, and that is not the goal here. The goal is a confident kid who knows this material cold.</p>
+    <p>This game practices the same skill areas as the i-Ready Diagnostic, which Gwinnett County schools give three times a year: number sense, addition and subtraction, patterns, shapes, and measurement in math; sounds, phonics, sight words, vocabulary, and comprehension in reading. Questions are read aloud, and each world steps up or down in difficulty as your child answers. Step 1 is roughly kindergarten, step 2 first grade, step 3 a second-grade stretch.</p>
+    <p><strong>Being honest about the gifted process:</strong> strong screener scores can help start a referral, and referrals can also come from a teacher or from you directly. Eligibility in Georgia then requires a separate mental-ability test score at the 96th percentile plus qualifying scores in achievement, creativity, and motivation. This app practices the achievement piece only. No app can promise a placement, and that is not the goal here. The goal is a confident kid who knows this material cold.</p>
     <p><strong>A three-week rhythm that works:</strong></p>
-    <div class="weekplan"><p><strong>Week 1 — math worlds.</strong> One or two 10–15 minute sessions a day. Let him use the read-aloud button freely. Watch the Progress list above: you want step 2 or 3 with most answers right.</p></div>
-    <div class="weekplan"><p><strong>Week 2 — reading worlds.</strong> Same rhythm. Revisit any math world that sits at step 1.</p></div>
-    <div class="weekplan"><p><strong>Week 3 — Super Mix daily.</strong> Practice the habit that matters most on test day: listen, think, then tap. The game never rewards speed on purpose — testers flag rushed answers.</p></div>
-    <p><strong>Healthy limits are built in:</strong> a stretch break every third round, and a wind-down screen after about 15 minutes. For a five-year-old, two short sessions beat one long one — and sleep the night before the test beats everything.</p>
+    <div class="weekplan"><p><strong>Week 1: math worlds.</strong> One or two 10 to 15 minute sessions a day. Let him use the read-aloud button freely. Watch the Progress list above: you want step 2 or 3 with most answers right.</p></div>
+    <div class="weekplan"><p><strong>Week 2: reading worlds.</strong> Same rhythm. Revisit any math world that sits at step 1.</p></div>
+    <div class="weekplan"><p><strong>Week 3: Super Mix daily.</strong> Practice the habit that matters most on test day: listen, think, then tap. The game never rewards speed on purpose, because testers flag rushed answers.</p></div>
+    <p><strong>Healthy limits are built in:</strong> a stretch break every third round, and a wind-down screen after about 15 minutes. For a five-year-old, two short sessions beat one long one, and sleep the night before the test beats everything.</p>
     <p>Progress saves on this device. The Grown-ups tab opens with a press-and-hold so little fingers stay in the game.</p>`;
 }
 
@@ -1758,11 +1822,31 @@ holdToOpen($('navParent'),1200,()=>{leaveQuiz();renderParent();show('scr-parent'
 $('navParent').addEventListener('click',()=>{speak('Grown-ups only. Press and hold to open.');});
 
 /* ============ boot ============ */
+function submitName(){
+  const v=($('nameInput').value||'').trim().slice(0,14);
+  const nm=v?v[0].toUpperCase()+v.slice(1):'Hero';
+  S.player=nm;save();
+  sfx.fanfare();confetti(24);
+  speak(`Welcome to Doctor Sam's Academy, ${nm}. Let's train that super brain.`);
+  renderHome();show('scr-home');
+}
+$('nameGo').onclick=submitName;
+$('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')submitName();});
 load();
+if(!AV_DEFS[S.avatar])S.avatar='webz';
+S.unlockedAv=(S.unlockedAv||[]).filter(id=>AV_DEFS[id]);
+['webz','dash'].forEach(id=>{if(!S.unlockedAv.includes(id))S.unlockedAv.push(id);});
 ensureWorldState();
 setupDaily();
 refreshTopbar();
-renderHome();
+if(!S.player){
+  $('nameMascot').innerHTML=mascotSVG('cheer',120);
+  show('scr-name');
+  speak("Welcome to Doctor Sam's Academy. Every hero has a name. What is yours?");
+}else{
+  renderHome();
+  show('scr-home');
+}
 save();
 </script>
 </body>
