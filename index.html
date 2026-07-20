@@ -1323,12 +1323,26 @@ function drawCard(minTier){
 }
 
 /* ============ daily / streak ============ */
+function dailyGoalsFor(dateStr){
+  // Same three goals on every device for a given date.
+  const dayNum=parseInt(dateStr.replace(/-/g,''),10)||0;
+  const mathWs=WORLDS.filter(w=>w.sub==='math');
+  const readWs=WORLDS.filter(w=>w.sub==='read');
+  return [mathWs[(dayNum+4)%mathWs.length].id, readWs[(dayNum+1)%readWs.length].id, 'mix'];
+}
 function setupDaily(){
   const t=todayStr();
-  if(S.daily.date===t)return;
-  const mathW=pick(WORLDS.filter(w=>w.sub==='math'));
-  const readW=pick(WORLDS.filter(w=>w.sub==='read'));
-  S.daily={date:t,goals:[mathW.id,readW.id,'mix'],done:[],chest:false,missions:0};
+  const goals=dailyGoalsFor(t);
+  if(S.daily.date===t){
+    if(JSON.stringify(S.daily.goals)!==JSON.stringify(goals)){
+      // migrate an older random pick to the shared daily set, keeping progress
+      S.daily.goals=goals;
+      S.daily.done=S.daily.done.filter(g=>goals.includes(g));
+      save();
+    }
+    return;
+  }
+  S.daily={date:t,goals,done:[],chest:false,missions:0};
   save();
 }
 function markPlayedToday(){
