@@ -95,12 +95,12 @@
   .streak-line{text-align:center;font-weight:800;color:var(--ink);font-size:15px;margin-bottom:4px;}
   .avatar-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px 0 18px;}
   .av{
-    width:86px;height:98px;border-radius:18px;background:var(--card);border:2px solid var(--line);
+    width:86px;min-height:98px;height:auto;padding:8px 4px;border-radius:18px;background:var(--card);border:2px solid var(--line);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
     cursor:pointer;transition:transform .1s;position:relative;box-shadow:var(--shadow);
   }
   .av svg{width:56px;height:56px;}
-  .av .avname{font-size:12px;font-weight:800;color:var(--ink2);}
+  .av .avname{font-size:12px;font-weight:800;color:var(--ink2);max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .av.sel{border:3px solid var(--coral);}
   .av.sel::after{
     content:'';position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;
@@ -405,9 +405,11 @@
     <div class="center-card">
       <span id="nameMascot"></span>
       <h2>Welcome to Dr Sam&#8217;s Academy</h2>
-      <p>Every hero has a name. What is yours?</p>
+      <p>Every hero has a name. Who is training today?</p>
+      <div class="avatar-row" id="profileRow" style="margin:4px 0 10px"></div>
       <input class="name-input" id="nameInput" maxlength="14" autocomplete="off" placeholder="Type your name" aria-label="Type your name">
       <button class="btn btn-primary" id="nameGo">Start my training</button>
+      <button class="btn btn-quiet" id="nameBack" style="display:none">Back</button>
     </div>
   </div>
 
@@ -509,7 +511,7 @@
 <div class="pack-overlay" id="packOverlay" role="dialog" aria-label="Card pack">
   <div class="pack-box">
     <h2>Card pack</h2>
-    <p style="color:var(--ink2);font-weight:700;margin:0">Three new cards for your album</p>
+    <p style="color:var(--ink2);font-weight:700;margin:0">Three cards for your album</p>
     <div class="pack-cards" id="packCards"></div>
     <button class="btn btn-primary" id="packClose">Into the album</button>
   </div>
@@ -533,6 +535,7 @@
 <script>
 /* ============ helpers ============ */
 const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const rint=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const pick=a=>a[rint(0,a.length-1)];
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rint(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -561,24 +564,52 @@ function numChoices(correct,wrongsPref,min,max){
 
 /* ============ state & save ============ */
 const RANKS=[[0,'Rookie'],[150,'Sidekick'],[400,'Hero'],[800,'Super Hero'],[1400,'Mega Hero'],[2200,'Legend']];
-const SAVE_KEY='heroAcademy_v2';
-let S={
-  player:'', avatar:'webz', unlockedAv:['webz','dash'],
-  coins:0, xp:0, bestStreak:0,
-  stars:{}, badges:{}, crowns:{}, levels:{}, perWorld:{},
-  cards:{}, muted:false, tab:'math',
-  lastPlay:'', streakDays:0, shieldWeek:'',
-  daily:{date:'',goals:[],done:[],chest:false,missions:0},
-  playLog:{}, seen:[]
-};
+const ROOT_KEY='drSamAcademy';
+function freshState(){
+  return {
+    player:'', avatar:'webz', unlockedAv:['webz','dash'],
+    coins:0, xp:0, bestStreak:0,
+    stars:{}, badges:{}, crowns:{}, levels:{}, perWorld:{},
+    cards:{}, muted:false, tab:'math',
+    lastPlay:'', streakDays:0, shieldWeek:'',
+    daily:{date:'',goals:[],done:[],chest:false,missions:0},
+    playLog:{}, seen:[], history:{}
+  };
+}
+let ROOT={profiles:{},current:''};
+let S=freshState();
 function save(){
-  try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}
+  try{
+    const disk=JSON.parse(localStorage.getItem(ROOT_KEY)||'null');
+    if(disk&&disk.profiles){
+      Object.keys(disk.profiles).forEach(k=>{if(!(k in ROOT.profiles))ROOT.profiles[k]=disk.profiles[k];});
+    }
+  }catch(e){}
+  if(S.player){ROOT.profiles[S.player]=S;ROOT.current=S.player;}
+  try{localStorage.setItem(ROOT_KEY,JSON.stringify(ROOT));}catch(e){}
 }
 function load(){
   try{
-    const raw=localStorage.getItem(SAVE_KEY);
-    if(raw){const d=JSON.parse(raw);if(d&&d.levels)S=Object.assign(S,d);}
+    const r=JSON.parse(localStorage.getItem(ROOT_KEY)||'null');
+    if(r&&r.profiles){ROOT=r;}
   }catch(e){}
+  if(!Object.keys(ROOT.profiles).length){
+    // migrate a save from the previous version
+    try{
+      const old=JSON.parse(localStorage.getItem('heroAcademy_v2')||'null');
+      if(old&&old.levels){const nm=old.player||'Hero';old.player=nm;ROOT.profiles[nm]=old;ROOT.current=nm;}
+    }catch(e){}
+  }
+  const cur=ROOT.current&&ROOT.profiles[ROOT.current];
+  if(cur)S=Object.assign(freshState(),cur);
+  if(!S.history)S.history={};
+}
+function logHistory(correct,level){
+  const d=todayStr();
+  if(!S.history)S.history={};
+  if(!S.history[d])S.history[d]={a:0,r:0,min:0,ls:0};
+  S.history[d].a++;if(correct)S.history[d].r++;
+  S.history[d].ls=(S.history[d].ls||0)+(level||1);
 }
 function rankInfo(){
   let i=0;for(let k=0;k<RANKS.length;k++)if(S.xp>=RANKS[k][0])i=k;
@@ -619,9 +650,22 @@ function pickVoice(){
 }
 if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
 function cleanSpoken(t){
-  return String(t).replace(/<[^>]*>/g,' ').replace(/_{2,}/g,' blank ')
-    .replace(/[−–]/g,' minus ').replace(/\+/g,' plus ').replace(/=/g,' equals ')
-    .replace(/[⚽🏀🏈⚾🚀🛡️🕷️⚡🏎️🥎🌟⭐🌙🕸️🟨✅]/g,'').replace(/\s+/g,' ').trim();
+  let x=String(t)
+    .replace(/<[^>]*>/g,' ')
+    .replace(/_{1,}/g,' blank ')
+    .replace(/[−–—]/g,' minus ')
+    .replace(/\+/g,' plus ')
+    .replace(/=/g,' equals ')
+    .replace(/¢/g,' cents')
+    .replace(/>/g,' is greater than ')
+    .replace(/</g,' is less than ')
+    .replace(/·/g,' ')
+    .replace(/\bDr\b\.?/g,'Doctor')
+    .replace(/&/g,' and ')
+    .replace(/[“”]/g,'"').replace(/[‘’]/g,"'")
+    .replace(/\.\.\./g,'. ');
+  try{x=x.replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{2BFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}\u{20E3}]/gu,' ');}catch(e){}
+  return x.replace(/\s+/g,' ').trim();
 }
 function speak(text){
   if(S.muted||!('speechSynthesis' in window)||!text)return;
@@ -785,7 +829,11 @@ const KID_NAMES=['Sam','Zoe','Ben','Maya','Kai','Leo'];
 /* ============ MATH ============ */
 function genNumber(L){
   if(L===1){
-    const t=rint(1,3);
+    const t=rint(1,5);
+    if(t===4){const n=rint(3,10);
+      return q(`Count backward. ${n}, ${n-1}, what comes next?`,'',numChoices(n-2,[n-1,n,n-3],0,12),`Counting back: ${n}, ${n-1}, ${n-2}.`,`Count backward. ${n}, ${n-1}. What comes next?`);}
+    if(t===5){const n=rint(2,9);
+      return q(`What number is between ${n-1} and ${n+1}?`,'',numChoices(n,[n-1,n+1,n+2],0,12),`${n} sits right between ${n-1} and ${n+1}.`,`What number is between ${n-1} and ${n+1}?`);}
     if(t===1){const n=rint(3,10),e=pick(COUNT_EMOJI);
       return q('How many do you see?',group(e,n),numChoices(n,[n-1,n+1],1,12),'Touch each one as you count.','How many do you see? Count each one.');}
     if(t===2){const n=rint(1,9);const after=rint(0,1)===1;
@@ -852,7 +900,8 @@ function genOps(L){
     if(t===4){const d=rint(2,9);
       return q(`${d} + ${d} = ?`,'',numChoices(d+d,[d+d-1,d+d+1,d],2,20),`Doubles: ${d} and ${d} make ${d+d}.`,`What is ${d} plus ${d}?`);}
     const a=rint(2,8);const total=rint(a+2,Math.min(a+9,15));
-    return q(`${a} + __ = ${total}`,'',numChoices(total-a,[total,a,total-a+1],0,15),`${a} plus ${total-a} makes ${total}.`,`${a} plus what number makes ${total}?`);
+    if(rint(0,1))return q(`${a} + __ = ${total}`,'',numChoices(total-a,[total,a,total-a+1],0,15),`${a} plus ${total-a} makes ${total}.`,`${a} plus what number makes ${total}?`);
+    return q(`Break apart ${total}. It is ${a} and how many more?`,'',numChoices(total-a,[a,total,total-a-1],0,15),`${total} breaks into ${a} and ${total-a}.`,`${total} breaks into ${a} and how many more?`);
   }
   const t=rint(1,5);
   if(t===1){const a=rint(2,8)*10,b=rint(11,29);
@@ -886,8 +935,10 @@ function genPattern(L){
       return q('What comes next?',`${x} ${y} ${z} ${x} ${y} <b>?</b>`,
         choicesFrom(z,[x,y],{n:3}),'Three things repeat in order: one, two, three.','Look at the pattern. What comes next?');}
     if(t===2){const s=rint(1,6);
-      return q(`${s}, ${s+2}, ${s+4}, what comes next?`,'',
-        numChoices(s+6,[s+5,s+7,s+8],1,20),'Each number jumps up by 2.',`${s}, ${s+2}, ${s+4}. What number comes next?`);}
+      if(rint(0,1))return q(`${s}, ${s+2}, ${s+4}, what comes next?`,'',
+        numChoices(s+6,[s+5,s+7,s+8],1,20),'Each number jumps up by 2.',`${s}, ${s+2}, ${s+4}. What number comes next?`);
+      return q(`Find the missing number. ${s}, ${s+1}, __, ${s+3}`,'',
+        numChoices(s+2,[s+1,s+3,s+4],0,20),`Counting up by 1: the missing number is ${s+2}.`,`Find the missing number. ${s}, ${s+1}, blank, ${s+3}.`);}
     const a=rint(2,6),b=rint(2,6);
     return q(`${a} + ${b} = __`,'',numChoices(a+b,[a+b-1,a+b+1,a],2,15),'Both sides of the equals sign must match.',`${a} plus ${b} equals what?`);
   }
@@ -930,8 +981,13 @@ function genShape(L){
     if(t===2){const solids=[['⚽','sphere'],['🎲','cube'],['🍦','cone'],['🥫','cylinder']];const [e,name]=pick(solids);
       return q('What solid shape is this?',`<span style="font-size:44px">${e}</span>`,
         choicesFrom(cap(name),solids.map(s=>cap(s[1])).filter(x=>x!==cap(name))),`A ${name} is the solid shape you see.`,'What solid shape is this?');}
-    return q('A sandwich is cut into 2 equal parts. What is each part called?','🥪',
+    if(rint(0,1))return q('A sandwich is cut into 2 equal parts. What is each part called?','🥪',
       choicesFrom('A half',['A whole','A corner','A fourth']),'Two equal parts are called halves.');
+    const round=[['⚽','ball'],['🍪','cookie'],['🕐','clock']];const notRound=[['📦','box'],['📕','book'],['🚪','door']];
+    const [ne,nn]=pick(notRound);
+    return q('Which one is NOT round?','',
+      shuffle([...round.slice(0,3).map(r2=>({label:r2[0]+' '+cap(r2[1]),correct:false})),{label:ne+' '+cap(nn),correct:true}]),
+      `A ${nn} has flat sides and corners, so it is not round.`,'Which one is not round?');
   }
   const t=rint(1,3);
   if(t===1){const facts=[['corners (vertices)',8,'A cube has 8 corners. Check a dice.'],['flat faces',6,'A cube has 6 flat faces.'],['edges',12,'A cube has 12 edges where faces meet.']];
@@ -975,9 +1031,15 @@ function genMeasure(L){
     if(t===1){const h=rint(1,12);
       return q('What time is it?',clockSVG(h,0),
         choicesFrom(`${h}:00`,[`${(h%12)+1}:00`,`${h===1?12:h-1}:00`,`${h}:30`]),`The short hand points at ${h}, so it is ${h} o’clock.`,'What time does the clock show?');}
-    if(t===2){const n=rint(4,9);
-      return q('How many cubes long is the pencil?',`✏️<br><span style="font-size:22px">${'🟨'.repeat(n)}</span>`,
-        numChoices(n,[n-1,n+1,n+2],2,12),'Count the cubes lined up under it.');}
+    if(t===2){
+      if(rint(0,1)){const n=rint(4,9);
+        return q('How many cubes long is the pencil?',`✏️<br><span style="font-size:22px">${'🟨'.repeat(n)}</span>`,
+          numChoices(n,[n-1,n+1,n+2],2,12),'Count the cubes lined up under it.');}
+      const tools=[['how long a table is','A ruler 📏',['A clock ⏰','A cup 🥤','A scale ⚖️'],'Rulers measure how long things are.'],
+        ['what time it is','A clock ⏰',['A ruler 📏','A spoon 🥄','A crayon 🖍️'],'Clocks tell the time.'],
+        ['how heavy a pumpkin is','A scale ⚖️',['A clock ⏰','A ruler 📏','A pencil ✏️'],'Scales measure how heavy things are.']];
+      const [what,ans,wr,ex]=pick(tools);
+      return q(`What do we use to measure ${what}?`,'',choicesFrom(ans,wr),ex,`What do we use to measure ${what}?`);}
     if(t===3){const counts=shuffle([rint(2,4),rint(5,6),rint(7,9)]);
       const teams=[['⚽','Soccer'],['🏀','Basketball'],['🏎️','Racing']];
       const most=counts.indexOf(Math.max(...counts));
@@ -1016,52 +1078,84 @@ const RHYME_FAMS=[
   ['night',['light','right','kite','bright'],['spoon','grass','duck']],
   ['sun',['fun','run','bun','spun'],['star','lamp','book']],
   ['bake',['cake','lake','snake','rake'],['door','hand','wolf']],
-  ['bed',['red','sled','head','fed'],['moon','fox','car']]
+  ['bed',['red','sled','head','fed'],['moon','fox','car']],
+  ['top',['hop','mop','pop','stop'],['cat','leaf','moon']],
+  ['day',['play','say','way','stay'],['dog','king','net']],
+  ['pig',['dig','big','wig','fig'],['sun','coat','bell']],
+  ['coat',['boat','goat','float','note'],['fish','ring','hand']],
+  ['ten',['pen','hen','men','when'],['cup','sock','star']],
+  ['bee',['see','tree','knee','three'],['dog','cup','sand']],
+  ['rock',['sock','clock','block','lock'],['bird','rain','five']],
+  ['bell',['tell','well','shell','fell'],['jam','moon','grass']]
 ];
 const BEGIN_SOUNDS=[
   ['ball','🏀',['bat','bus'],['sun','cat','fish']],
   ['sun','☀️',['sock','sand'],['dog','moon','hat']],
   ['moon','🌙',['mouse','milk'],['ball','tree','king']],
   ['dog','🐶',['duck','door'],['cat','pig','web']],
-  ['table','🪑',['tiger','turtle'],['apple','ball','moon']],
-  ['spider','🕷️',['spoon','star'],['dog','cake','fish']]
+  ['turtle','🐢',['table','tiger'],['apple','ball','moon']],
+  ['spider','🕷️',['spoon','star'],['dog','cake','fish']],
+  ['fish','🐟',['fox','fan'],['cat','sun','ring']],
+  ['king','👑',['kite','key'],['moon','table','sock']],
+  ['leaf','🍃',['lion','lamp'],['dog','fish','sun']],
+  ['rocket','🚀',['ring','rug'],['ball','king','moon']],
+  ['goat','🐐',['gate','gum'],['fish','table','duck']],
+  ['penguin','🐧',['pizza','pan'],['moon','leaf','king']]
 ];
 const CVC=[
   ['cat','🐱',['cot','cut','cap']],['dog','🐶',['dig','dot','dug']],
   ['sun','☀️',['sat','sit','run']],['bug','🐞',['bag','big','bud']],
   ['hat','🎩',['hot','hit','ham']],['pig','🐷',['peg','pin','pit']],
   ['web','🕸️',['wet','wig','win']],['bed','🛏️',['bad','bud','bet']],
-  ['net','🥅',['nut','not','nap']],['run','🏃',['ran','rug','rat']]
+  ['net','🥅',['nut','not','nap']],['run','🏃',['ran','rug','rat']],
+  ['map','🗺️',['mop','mat','man']],['ten','🔟',['tan','tin','hen']],
+  ['cup','🥤',['cap','cut','cub']],['log','🪵',['leg','lag','lot']],
+  ['jam','🍓',['jet','jab','ham']],['six','6️⃣',['sax','sit','fix']],
+  ['van','🚐',['fan','vat','vet']],['fox','🦊',['fix','box','fog']],
+  ['mud','🟤',['mad','mug','bud']],['pen','🖊️',['pin','pan','hen']]
 ];
 const DIGRAPHS=[
   ['sh','ship',['chip','sip','trip']],['sh','shark',['spark','sock','stick']],
   ['ch','cheese',['sheep','tree','knee']],['ch','chair',['share','car','hair']],
-  ['th','thumb',['drum','tub','sum']],['wh','whale',['tail','well','wing']]
+  ['th','thumb',['drum','tub','sum']],['wh','whale',['tail','well','wing']],
+  ['sh','sheep',['sleep','seep','keep']],['ch','chin',['shin','tin','win']],
+  ['th','think',['sink','wink','tank']],['wh','wheel',['well','heel','feel']]
 ];
 const BLENDS=[
   ['st','stop',['sop','top','shop']],['fr','frog',['fog','log','rug']],
   ['bl','block',['back','lock','rock']],['gr','grass',['gas','glass','class']],
-  ['sn','snap',['sap','nap','map']],['tr','truck',['tuck','duck','luck']]
+  ['sn','snap',['sap','nap','map']],['tr','truck',['tuck','duck','luck']],
+  ['sp','spin',['sin','pin','win']],['cl','clap',['cap','lap','tap']],
+  ['dr','drum',['dum','rum','hum']],['sw','swim',['sim','win','dim']],
+  ['pl','plant',['pant','land','sand']],['sm','smile',['mile','pile','tile']]
 ];
 const RCONTROL=[
   ['ar','car',['can','cap','cow']],['ar','star',['stay','sit','sun']],
-  ['or','fork',['fox','fun','face']],['er','tiger',['title','table','tent']]
+  ['or','fork',['fox','fun','face']],['er','tiger',['title','table','tent']],
+  ['ar','shark',['shack','shake','sock']],['or','corn',['can','cone','cane']],
+  ['ir','bird',['bed','bad','bud']],['ur','turtle',['total','table','tickle']]
 ];
-const MAGIC_E=[['kit','kite'],['cap','cape'],['tap','tape'],['not','note'],['cub','cube'],['tub','tube'],['rob','robe'],['plan','plane']];
+const MAGIC_E=[['kit','kite',['kitten','bite']],['cap','cape',['cake','keep']],['tap','tape',['tip','top']],['not','note',['nose','net']],['cub','cube',['cup','tub']],['tub','tube',['tab','cube']],['rob','robe',['rope','rib']],['plan','plane',['plate','plant']],['pin','pine',['pain','pan']],['hop','hope',['hip','rope']],['mad','made',['maid','mud']],['rid','ride',['road','red']],['cut','cute',['coat','cot']],['hug','huge',['hut','hush']]];
 const VOWEL_TEAMS=[
   ['ai','rain',['ran','run','rock']],['ee','feet',['fat','fit','fun']],
-  ['oa','boat',['bat','bit','bug']],['ay','play',['plan','plum','plop']]
+  ['oa','boat',['bat','bit','bug']],['ay','play',['plan','plum','plop']],
+  ['ea','seat',['sat','set','sit']],['oo','moon',['man','mine','mane']],
+  ['ow','snow',['snap','sun','spin']],['ee','tree',['trap','trip','true']]
 ];
 const INFLECT=[
   ['jump','jumped','Yesterday, Sam __ over the puddle.',['jumping','jumps','jump']],
   ['play','playing','Right now, Maya is __ outside.',['played','plays','play']],
-  ['run','runs','Every day, Leo __ to the bus.',['ran','running','runned']],
-  ['bake','baked','Last night, we __ cookies.',['bakes','baking','bake']]
+  ['run','runs','Every day, Leo __ to the bus.',['run','running','runner']],
+  ['bake','baked','Last night, we __ cookies.',['bakes','baking','bake']],
+  ['kick','kicked','Yesterday, Zoe __ the winning goal.',['kicking','kicks','kick']],
+  ['read','reading','Right now, Dad is __ a book.',['reads','readed','read']],
+  ['help','helps','Every morning, Ben __ his little sister.',['helping','help','helper']],
+  ['climb','climbed','Last week, we __ the big hill.',['climbs','climbing','climb']]
 ];
 const SIGHT={
-  1:['the','and','see','can','you','my','go','we','like','is','to','in','it','at','me'],
-  2:['they','have','was','are','what','said','come','some','here','want','little','from','when','out','her'],
-  3:['because','before','their','would','could','right','goes','always','together','around','very','every','does','again','about']
+  1:['the','and','see','can','you','my','go','we','like','is','to','in','it','at','me','up','am','do','he','she','has','look','play','said','for'],
+  2:['they','have','was','are','what','said','come','some','here','want','little','from','when','out','her','his','how','who','went','saw','now','down','over','under','ride'],
+  3:['because','before','their','would','could','right','goes','always','together','around','very','every','does','again','about','which','where','why','these','those','know','found','been','first','after']
 };
 const CLOZE=[
   [1,'I ___ a big dog.','see',['tree','sun','sit']],
@@ -1073,13 +1167,26 @@ const CLOZE=[
   [2,'I want to ___ outside.','play',['plan','pail','park']],
   [3,'I wear a coat ___ it is cold.','because',['before','between','below']],
   [3,'We play ___ after school.','together',['tomorrow','yesterday','under']],
-  [3,'She ___ to school every day.','goes',['gone','grow','good']]
+  [3,'She ___ to school every day.','goes',['gone','grow','good']],
+  [1,'The cat is ___ the box.','in',['it','if','is']],
+  [1,'Come ___ with me.','play',['plan','place','pail']],
+  [1,'I can ___ a bird.','see',['sit','set','say']],
+  [2,'We ___ to the park yesterday.','went',['want','wet','win']],
+  [2,'___ is your backpack?','Where',['What','When','There']],
+  [2,'The dog ran ___ the table.','under',['until','uncle','upon']],
+  [3,'I know ___ the sun sets.','why',['who','was','wow']],
+  [3,'They ___ a shiny rock at the beach.','found',['fond','fund','from']],
+  [3,'___ shoes are these?','Whose',['Where','What','When']]
 ];
 const OPPOSITES=[
   ['big','small',['tall','round','wide']],['hot','cold',['warm','wet','dry']],['fast','slow',['quick','loud','tall']],
   ['up','down',['over','under','tall']],['happy','sad',['glad','silly','kind']],['day','night',['noon','sun','sky']],
   ['open','closed',['wide','round','tall']],['loud','quiet',['noisy','fast','big']],['full','empty',['heavy','tall','deep']],
-  ['strong','weak',['brave','hard','fast']]
+  ['strong','weak',['brave','hard','fast']],
+  ['tall','short',['long','high','wide']],['wet','dry',['damp','cold','soft']],
+  ['first','last',['next','best','most']],['soft','hard',['smooth','warm','light']],
+  ['light','heavy',['bright','tall','thin']],['near','far',['close','here','next']],
+  ['clean','dirty',['tidy','shiny','neat']],['front','back',['side','top','middle']]
 ];
 const CATEGORIES=[
   ['an animal','tiger',['chair','apple','truck']],
@@ -1087,37 +1194,64 @@ const CATEGORIES=[
   ['something you wear','jacket',['pizza','cloud','rock']],
   ['something that flies','helicopter',['flower','fork','frog']],
   ['a sport','soccer',['sleeping','cooking','singing']],
-  ['an insect','ant',['bird','cow','shark']]
+  ['an insect','ant',['bird','cow','shark']],
+  ['a vegetable','carrot',['cookie','candy','cake']],
+  ['something cold','ice cream',['soup','fire','sun']],
+  ['a place to learn','school',['bathtub','closet','garage']],
+  ['an ocean animal','dolphin',['horse','chicken','squirrel']],
+  ['something with wheels','bicycle',['ladder','pillow','kite']],
+  ['a shape','triangle',['purple','seven','loud']]
 ];
 const SYNONYMS=[
   ['big','huge',['tiny','loud','soft']],['fast','quick',['slow','tall','cold']],
   ['happy','glad',['angry','sleepy','sad']],['small','tiny',['giant','wide','tall']],
   ['smart','clever',['silly','slow','loud']],['yell','shout',['whisper','sleep','walk']],
-  ['begin','start',['stop','end','wait']],['afraid','scared',['brave','happy','strong']]
+  ['begin','start',['stop','end','wait']],['afraid','scared',['brave','happy','strong']],
+  ['cold','chilly',['warm','hot','wet']],['look','watch',['sleep','eat','run']],
+  ['pretty','beautiful',['ugly','messy','tall']],['angry','mad',['glad','calm','shy']],
+  ['jump','leap',['crawl','sit','swim']],['gift','present',['party','box','store']],
+  ['loud','noisy',['quiet','soft','slow']],['tired','sleepy',['awake','hungry','busy']]
 ];
 const CONTRACTIONS=[
-  ['can not',"can't",["can","cannot't","c'ant"]],
-  ['do not',"don't",["dont'","do'nt","did"]],
-  ['it is',"it's",["its'","is't","sit"]],
-  ['I am',"I'm",["Im'","I'am","am"]]
+  ['can not',"can't",["can","cat","don't"]],
+  ['do not',"don't",["do","dot","can't"]],
+  ['it is',"it's",["is","sit","I'm"]],
+  ['I am',"I'm",["am","in","it's"]],
+  ['is not',"isn't",["is","into","wasn't"]],
+  ['we will',"we'll",["we","will","wall"]],
+  ['you are',"you're",["you","yes","we're"]],
+  ['did not',"didn't",["did","dent","don't"]]
 ];
 const COMPOUNDS=[
   ['sun','shine','sunshine',['sunshoe','shinesun','sunny']],
   ['rain','bow','rainbow',['bowrain','rainy','raindow']],
   ['cup','cake','cupcake',['cakecup','cupcap','cuppy']],
-  ['base','ball','baseball',['ballbase','basebell','basket']]
+  ['base','ball','baseball',['ballbase','basebell','basket']],
+  ['star','fish','starfish',['fishstar','starship','stardust']],
+  ['back','pack','backpack',['packback','backpick','sackpack']],
+  ['pan','cake','pancake',['cakepan','pincake','pancape']],
+  ['fire','fly','firefly',['flyfire','fireflow','flatfly']],
+  ['snow','man','snowman',['mansnow','snowmen','sunman']]
 ];
 const CONTEXT=[
   ['The gigantic truck was as big as a house. What does gigantic mean?','Very big',['Very small','Very fast','Very red'],'The clue is "as big as a house."'],
   ['Sam was exhausted after the race, so he sat down to rest. What does exhausted mean?','Very tired',['Very hungry','Very happy','Very tall'],'The clue is that he needed to rest.'],
   ['The hero was brave. She was not scared of anything. What does brave mean?','Not scared',['Very sleepy','Very small','Not fast'],'The next sentence tells you: not scared.'],
   ['The cheetah is swift. It runs faster than any other animal. What does swift mean?','Fast',['Slow','Furry','Hungry'],'The clue is "runs faster than any other animal."'],
-  ['Maya felt proud when she won the spelling bee. What does proud mean?','Happy about doing well',['Mad about losing','Scared of bees','Sleepy at school'],'Winning made her feel good about her work.']
+  ['Maya felt proud when she won the spelling bee. What does proud mean?','Happy about doing well',['Mad about losing','Scared of bees','Sleepy at school'],'Winning made her feel good about her work.'],
+  ['The room was silent. Nobody made a single sound. What does silent mean?','Very quiet',['Very messy','Very dark','Very big'],'The clue is that nobody made a sound.'],
+  ['Leo was starving, so he ate two whole sandwiches. What does starving mean?','Very hungry',['Very sleepy','Very angry','Very fast'],'Eating two sandwiches shows how hungry he was.'],
+  ['The tiny ant crawled under the smallest leaf. What does tiny mean?','Very small',['Very slow','Very green','Very strong'],'The clue is the smallest leaf.'],
+  ['Kai was curious about the box, so he peeked inside. What does curious mean?','Wanting to know',['Feeling sleepy','Feeling cold','Wanting to leave'],'Peeking inside shows he wanted to know.'],
+  ['The path was slippery after the rain, so we walked slowly. What does slippery mean?','Easy to slide on',['Easy to see','Very long','Very clean'],'Rain makes paths slide-y, so we walk slowly.']
 ];
 const POSITIONS=[
   ['The star is above the box. Where is the star?','<div style="font-size:34px;line-height:1.2">⭐<br>📦</div>','On top of the box',['Under the box','Inside the box','Behind the box'],'Above means on top.'],
   ['The ball is under the chair. Where is the ball?','<div style="font-size:34px;line-height:1.2">🪑<br>⚽</div>','Below the chair',['On the chair','Far away','In the sky'],'Under means below.'],
-  ['The spider is between the two webs. Where is the spider?','<div style="font-size:34px">🕸️🕷️🕸️</div>','In the middle',['On the left','On the right','Up high'],'Between means in the middle.']
+  ['The spider is between the two webs. Where is the spider?','<div style="font-size:34px">🕸️🕷️🕸️</div>','In the middle',['On the left','On the right','Up high'],'Between means in the middle.'],
+  ['The bird is next to the tree. Where is the bird?','<div style="font-size:34px">🌳🐦</div>','Beside the tree',['Inside the tree','Under the ground','Far away'],'Next to means beside.'],
+  ['The frog is on top of the rock. Where is the frog?','<div style="font-size:34px;line-height:1.2">🐸<br>🪨</div>','Above the rock',['Under the rock','Behind the rock','In the water'],'On top means above.'],
+  ['The apple is inside the basket. Where is the apple?','<div style="font-size:34px">🧺🍎</div>','In the basket',['On the roof','Under the table','Next to the door'],'Inside means in.']
 ];
 const STORIES={
   1:[
@@ -1126,7 +1260,13 @@ const STORIES={
     {p:'Mia sees a bug. The bug is little and green.',q:'What color is the bug?',a:'Green',w:['Red','Blue','Yellow'],ex:'The story says the bug is green.'},
     {p:'Dad and I bake a cake. It smells so good.',q:'What do they bake?',a:'A cake',w:['Cookies','Pizza','Bread'],ex:'They bake a cake together.'},
     {p:'The cat naps on the bed. It is soft and warm.',q:'Where does the cat nap?',a:'On the bed',w:['In a tree','On the grass','In a box'],ex:'The cat naps on the bed.'},
-    {p:'Leo has a fast bike. He rides it to the shop.',q:'How does Leo get to the shop?',a:'He rides his bike',w:['He walks','He flies','He swims'],ex:'Leo rides his fast bike.'}
+    {p:'Leo has a fast bike. He rides it to the shop.',q:'How does Leo get to the shop?',a:'He rides his bike',w:['He walks','He flies','He swims'],ex:'Leo rides his fast bike.'},
+    {p:'Ben got new red boots. He jumps in every puddle.',q:'What did Ben get?',a:'New red boots',w:['A new hat','Blue shoes','An umbrella'],ex:'The first sentence says new red boots.'},
+    {p:'The bus is big and yellow. It takes kids to school.',q:'Where does the bus take the kids?',a:'To school',w:['To the zoo','To the store','To the beach'],ex:'The bus takes kids to school.'},
+    {p:'Nia draws a sun. She uses her yellow crayon.',q:'What does Nia use?',a:'A yellow crayon',w:['A red marker','A paintbrush','A pencil'],ex:'She uses her yellow crayon.'},
+    {p:'The pup digs a hole. He hides his bone in it.',q:'What does the pup hide?',a:'His bone',w:['His ball','His sock','His hat'],ex:'He hides his bone in the hole.'},
+    {p:'Ana claps for her team. They win the big game.',q:'Who wins the game?',a:'Her team',w:['The other team','Nobody','The coach'],ex:'The story says they win.'},
+    {p:'It is hot today. We eat cold ice pops on the steps.',q:'What do they eat?',a:'Cold ice pops',w:['Hot soup','Warm bread','Big apples'],ex:'They eat cold ice pops because it is hot.'}
   ],
   2:[
     {p:'Zoe lost her tooth at lunch. She was scared at first, but her teacher smiled and gave her a tiny tooth box. Zoe felt better.',q:'How did Zoe feel at the end?',a:'Better',w:['Scared','Angry','Sleepy'],ex:'She was scared at first, but the teacher helped, so she felt better.'},
@@ -1134,7 +1274,13 @@ const STORIES={
     {p:'The little hedgehog wanted to be fast like the wind. He practiced running every single morning. Soon, he won the forest race.',q:'Why did the hedgehog win the race?',a:'He practiced every morning',w:['He took a bus','He slept all day','He gave up'],ex:'All that practice made him faster.'},
     {p:'It rained all day, so recess was inside. Maya taught her friends a new card game, and everyone laughed a lot.',q:'Why was recess inside?',a:'It rained all day',w:['It was too sunny','The bell broke','It snowed'],ex:'The rain kept everyone inside.'},
     {p:'Kai planted a seed and watered it every day. After many weeks, a tall sunflower grew taller than Kai.',q:'What is this story mostly about?',a:'Kai growing a sunflower',w:['Kai baking bread','A rainy day','A lost puppy'],ex:'Every sentence is about the seed growing.'},
-    {p:'The firefighter heard a kitten crying in a tall tree. She climbed up, scooped the kitten gently, and brought it down safely.',q:'How did the firefighter help?',a:'She rescued the kitten from the tree',w:['She baked a cake','She fixed a car','She read a book'],ex:'She climbed the tree and saved the kitten.'}
+    {p:'The firefighter heard a kitten crying in a tall tree. She climbed up, scooped the kitten gently, and brought it down safely.',q:'How did the firefighter help?',a:'She rescued the kitten from the tree',w:['She baked a cake','She fixed a car','She read a book'],ex:'She climbed the tree and saved the kitten.'},
+    {p:'Omar forgot his lunch at home. His friend Tara shared her sandwich and an apple with him. Omar said she was a true friend.',q:'Why did Omar call Tara a true friend?',a:'She shared her lunch with him',w:['She ran fast','She told a joke','She drew a picture'],ex:'Sharing her lunch showed she was a good friend.'},
+    {p:'The little robot could not reach the top shelf. It stacked three books, climbed up carefully, and grabbed the shiny bolt it needed.',q:'How did the robot solve its problem?',a:'It stacked books and climbed up',w:['It gave up','It called a bird','It grew taller'],ex:'It made steps out of books.'},
+    {p:'First the tadpole swims in the pond. Next it grows two back legs. Last it becomes a frog and hops onto land.',q:'What happens last?',a:'It becomes a frog',w:['It swims in the pond','It grows back legs','It turns into a fish'],ex:'The word last tells you: it becomes a frog.'},
+    {p:'Dee planted two seeds. She watered one every day and forgot the other. Only the watered seed grew into a flower.',q:'Why did only one seed grow?',a:'Only one seed got water',w:['One seed was bigger','A bird took one','The sun was too hot'],ex:'The watered seed grew, the forgotten one did not.'},
+    {p:'The wind blew off Papa\'s hat. It rolled down the street, bounced off a bench, and landed right on a sleeping dog.',q:'Where did the hat land?',a:'On a sleeping dog',w:['On the bench','In a tree','In the river'],ex:'The hat landed right on the dog.'},
+    {p:'Ruby practiced tying her shoes every night. At first the loops fell apart. On Friday, she tied a perfect bow all by herself.',q:'How did Ruby learn to tie her shoes?',a:'She practiced every night',w:['Her shoes tied themselves','She bought new shoes','She asked a wizard'],ex:'Nightly practice made it work.'}
   ],
   3:[
     {p:'Cheetahs are the fastest land animals on Earth. They can run 70 miles per hour, but only for a short time. Then they must rest and catch their breath.',q:'What is the main idea?',a:'Cheetahs are very fast runners',w:['Cheetahs love to sleep','Cheetahs live in water','Cheetahs eat plants'],ex:'Every sentence is about how fast cheetahs are.'},
@@ -1143,7 +1289,13 @@ const STORIES={
     {p:'Hummingbirds are tiny birds that flap their wings about 50 times every second. They can even fly backward. Most birds cannot do that.',q:'What makes hummingbirds special?',a:'They can fly backward',w:['They are the biggest birds','They cannot fly','They swim fast'],ex:'The passage says most birds cannot fly backward, but hummingbirds can.'},
     {p:'Marcus wanted to try out for the swim team, but he was nervous. His sister said being nervous means you care. Marcus tried out anyway and made the team.',q:'What lesson does this story teach?',a:'Try even when you feel nervous',w:['Never try new things','Swimming is easy','Sisters are bossy'],ex:'Marcus felt nervous but tried anyway, and it worked out.'},
     {p:'Recycling turns old things into new things. Paper can become new paper, and plastic bottles can even become playground slides. Recycling helps keep Earth clean.',q:'What is this passage mostly about?',a:'How recycling helps Earth',w:['How to buy bottles','Playing on slides','Writing on paper'],ex:'The whole passage explains what recycling does.'},
-    {p:'Bats sleep all day and wake up at night. They use sound to find their way in the dark. A bat can eat hundreds of bugs in one night.',q:'Does this teach facts, or tell a made-up story?',a:'It teaches facts',w:['It is a made-up story','It is a poem','It is a joke'],ex:'It gives true information about real bats, so it teaches facts.'}
+    {p:'Bats sleep all day and wake up at night. They use sound to find their way in the dark. A bat can eat hundreds of bugs in one night.',q:'Does this teach facts, or tell a made-up story?',a:'It teaches facts',w:['It is a made-up story','It is a poem','It is a joke'],ex:'It gives true information about real bats, so it teaches facts.'},
+    {p:'An octopus has eight arms and three hearts. If it loses an arm, it can grow a new one. It can even change color to hide.',q:'What can an octopus do if it loses an arm?',a:'Grow a new one',w:['Borrow an arm','Stop swimming','Turn into a fish'],ex:'The passage says it can grow a new arm.'},
+    {p:'Honey never goes bad. Bees make it from flower nectar and store it in wax rooms called cells. People have found honey that is thousands of years old.',q:'What do bees make honey from?',a:'Flower nectar',w:['Rain water','Tree bark','Sugar cubes'],ex:'Bees make honey from flower nectar.'},
+    {p:'Astronauts float inside the space station because they are falling around Earth. Their food is strapped down so it does not drift away. Even their sleeping bags are tied to the wall.',q:'Why is the food strapped down?',a:'So it does not float away',w:['So no one eats it','To keep it warm','Because it is heavy'],ex:'Everything floats, so food must be strapped down.'},
+    {p:'Jaya wanted the last swing, but a smaller kid was waiting too. She let him go first and pushed him high. His giant smile made her feel great.',q:'What does this story teach?',a:'Being kind feels good',w:['Swings are boring','Always go first','Small kids are slow'],ex:'Letting him go first made her feel great.'},
+    {p:'A seed needs three things to grow: soil, water, and sunlight. The soil holds the roots. Water and sunlight give the plant energy to stretch up tall.',q:'Which is NOT something a seed needs?',a:'Candy',w:['Soil','Water','Sunlight'],ex:'The passage lists soil, water, and sunlight.'},
+    {p:'Tom\'s kite crashed into the sand three times. He moved his hands lower on the string, ran faster, and the kite finally soared over the waves.',q:'What happened after Tom changed his grip and ran faster?',a:'The kite soared',w:['The kite crashed again','The string broke','It started to rain'],ex:'His changes made the kite fly.'}
   ]
 };
 
@@ -1167,15 +1319,15 @@ function genSounds(L){
     return q(`Clap it out. How many syllables in “${w}”?`,'',numChoices(n,[n-1,n+1,n+2],1,5),
       `Try clapping while you say it: ${w}.`,`How many syllables are in the word ${w}?`);
   }
-  if(rint(0,1)){const sets=[['cat','hat','h'],['run','sun','s'],['big','pig','p'],['make','lake','l']];
-    const [a,b,letter]=pick(sets);
-    return q(`Change the first sound of “${a}” to “${letter}.” What new word do you get?`,'',
-      choicesFrom(b,[a,a.slice(0,-1)+'p',letter+a]),`${a} becomes ${b}.`,`Change the first sound of ${a} to ${letter}. What new word do you get?`);}
+  if(rint(0,1)){const sets=[['cat','hat','h',['hot','ham']],['run','sun','s',['sit','sad']],['big','pig','p',['pin','bag']],['make','lake','l',['like','look']]];
+    const [a,b,letter,wr]=pick(sets);
+    return q(`Change the first letter of “${a}” to “${letter}.” What new word do you get?`,'',
+      choicesFrom(b,[a,...wr]),`${a} becomes ${b}.`,`Change the first letter of ${a} to ${letter}. What new word do you get?`);}
   const mids=[['cat','a'],['dog','o'],['pig','i'],['sun','u'],['net','e']];
   const [w,v]=pick(mids);
-  return q(`What vowel sound is in the middle of “${w}”?`,'',
+  return q(`Which vowel is in the middle of “${w}”?`,'',
     choicesFrom(v,shuffle(['a','e','i','o','u'].filter(x=>x!==v)).slice(0,3)),
-    `${w} has the “${v}” sound in the middle.`,`What vowel sound is in the middle of the word ${w}?`);
+    `${w} is spelled ${w.split('').join(', ')}. The vowel ${v} is in the middle.`,`Which vowel is in the middle of the word ${w}?`);
 }
 
 function genPhonics(L){
@@ -1191,9 +1343,9 @@ function genPhonics(L){
       return q(`Which is the lowercase letter ${up}?`,`<span style="font-size:44px;font-weight:800">${up}</span>`,
         choicesFrom(low,wr),`Big ${up} and small ${low} are the same letter.`,`Find the small letter that matches big ${up}.`);}
     const [w,e]=pick(CVC);
-    return q(`What is the last sound in “${w}”?`,`<span style="font-size:44px">${e}</span>`,
+    return q(`Which letter is at the END of “${w}”?`,`<span style="font-size:44px">${e}</span>`,
       choicesFrom(w[w.length-1],shuffle(['t','g','n','d','b','p'].filter(x=>x!==w[w.length-1])).slice(0,3)),
-      `${w} ends with the “${w[w.length-1]}” sound.`,`What is the last sound in ${w}?`);
+      `${w} is spelled ${w.split('').join(', ')}. It ends with ${w[w.length-1]}.`,`Which letter is at the end of the word ${w}?`);
   }
   if(L===2){
     const t=rint(1,3);
@@ -1202,22 +1354,22 @@ function genPhonics(L){
         choicesFrom(w,wr),`Sound it out: ${w.split('').join(', ')}. That makes ${w}.`,'Which word matches the picture?');}
     if(t===2){const [dg,word,wrongs]=pick(DIGRAPHS);
       return q(`Which word starts with the “${dg}” sound?`,'',
-        choicesFrom(word,wrongs),`${cap(word)} starts with ${dg}.`,`Which word starts with the ${dg} sound?`);}
+        choicesFrom(word,wrongs),`${cap(word)} starts with ${dg}.`,`Which word starts with the ${dg.split('').join(', ')} sound?`);}
     const [bl,word,wrongs]=pick(BLENDS);
     return q(`Which word starts with the “${bl}” blend?`,'',
-      choicesFrom(word,wrongs),`${cap(word)} starts with the ${bl} blend.`,`Which word starts with the ${bl} blend?`);
+      choicesFrom(word,wrongs),`${cap(word)} starts with the ${bl} blend.`,`Which word starts with the ${bl.split('').join(', ')} blend?`);
   }
   const t=rint(1,4);
-  if(t===1){const [short,long]=pick(MAGIC_E);
+  if(t===1){const [short,long,wr]=pick(MAGIC_E);
     return q(`Add a silent “e” to “${short}.” What word do you get?`,'',
-      choicesFrom(long,[short,short+short[short.length-1]+'e',short+'y']),
+      choicesFrom(long,[short,...(wr||[])].filter(x=>x!==long)),
       `The silent e makes the vowel say its name: ${long}.`,`Add a silent e to ${short}. What word do you get?`);}
   if(t===2){const [tm,word,wrongs]=pick(VOWEL_TEAMS);
     return q(`Which word has the “${tm}” vowel team?`,'',
-      choicesFrom(word,wrongs),`${cap(word)} has the letters ${tm} working together.`,`Which word has the ${tm} vowel team?`);}
+      choicesFrom(word,wrongs),`${cap(word)} has the letters ${tm} working together.`,`Which word has the ${tm.split('').join(', ')} vowel team?`);}
   if(t===3){const [rc,word,wrongs]=pick(RCONTROL);
     return q(`Which word has the “${rc}” sound, like in “${rc==='ar'?'car':rc==='or'?'corn':'her'}”?`,'',
-      choicesFrom(word,wrongs),`${cap(word)} has the ${rc} sound.`,`Which word has the ${rc} sound?`);}
+      choicesFrom(word,wrongs),`${cap(word)} has the ${rc} sound.`,`Which word has the ${rc.split('').join(', ')} sound?`);}
   const [base,ans,sent,wr]=pick(INFLECT);
   return q(`Which word finishes the sentence?<br><span class="passage">${sent.replace('__','_____')}</span>`,'',
     choicesFrom(ans,wr),`“${sent.replace('__',ans)}” sounds right.`,`Which word finishes the sentence: ${sent.replace('__','blank')}?`);
@@ -1352,10 +1504,9 @@ function markPlayedToday(){
   const yStr=yest.getFullYear()+'-'+String(yest.getMonth()+1).padStart(2,'0')+'-'+String(yest.getDate()).padStart(2,'0');
   if(S.lastPlay===yStr){S.streakDays++;}
   else if(S.lastPlay){ // missed at least a day: one shield per week
-    const wk=t.slice(0,8);
-    if(S.shieldWeek!==wk&&S.streakDays>0){S.shieldWeek=wk;}
-    else S.streakDays=1;
-    if(S.shieldWeek===wk&&S.streakDays>0)S.streakDays++;
+    const wk=String(Math.floor(Date.now()/86400000/7));
+    if(S.shieldWeek!==wk&&S.streakDays>0){S.shieldWeek=wk;S.streakDays++;}
+    else{S.streakDays=1;}
   } else S.streakDays=1;
   S.lastPlay=t;save();
 }
@@ -1382,6 +1533,7 @@ function refreshTopbar(){
   const r=rankInfo();
   $('tbRank').textContent=r.name;
   $('tbXp').style.width=r.pct+'%';
+  $('muteBtn').style.opacity=S.muted?.4:1;
 }
 
 /* ============ home ============ */
@@ -1417,7 +1569,7 @@ function renderHome(){
     gl.innerHTML+=`<div class="goal-row ${done?'done':''}"><span class="goal-check">${done?'<svg class="icon" style="width:15px;height:15px;stroke-width:3.5"><use href="#i-check"/></svg>':''}</span>${nm}</div>`;
   });
   $('chestNote').innerHTML=S.daily.chest
-    ?'<svg class="icon" style="width:18px;height:18px;color:var(--gold)"><use href="#i-chest"/></svg> Chest opened! See you tomorrow'
+    ?`<svg class="icon" style="width:18px;height:18px;color:var(--gold)"><use href="#i-chest"/></svg> Chest opened! Three new missions and a new chest arrive tomorrow${S.streakDays>1?'. Keep your '+S.streakDays+' day streak going':''}`
     :'<svg class="icon" style="width:18px;height:18px;color:var(--ink2)"><use href="#i-chest"/></svg> Finish all three to open the daily chest';
 }
 
@@ -1457,14 +1609,15 @@ function renderMap(){
 
 /* ============ quiz engine ============ */
 const BOSSES={num:'🤖',ops:'🦖',pat:'👾',shp:'🐙',mea:'🦂',snd:'🦇',phn:'🐍',sgt:'🐢',voc:'🦉',sto:'🐉'};
-let lastStart=0;
+let lastStart=0,lastMissionEnd=0;
 function startMission(worldId,boss){
   const now=Date.now();
   if(now-lastStart<600)return;
   lastStart=now;
+  if(lastMissionEnd&&now-lastMissionEnd>30*60000){sessionStart=now;missionsThisSession=0;}
   leaveQuiz();
   M={worldId,boss:!!boss,idx:0,right:0,hits:0,asked:0,hi:0,
-     wstreak:{},wwrong:{},picked:null,phase:'pick',timer:null,t0:now,golden:false};
+     wstreak:{},wwrong:{},cool:{},picked:null,phase:'pick',timer:null,t0:now,golden:false};
   show('scr-quiz');
   $('powerFill').style.width='0%';
   $('powerbar').style.display=boss?'none':'block';
@@ -1490,7 +1643,7 @@ function renderBossHp(){
   const hp=$('bossHp');hp.innerHTML='';
   for(let i=0;i<5;i++)hp.innerHTML+=`<div class="hp ${i<M.hits?'gone':''}"></div>`;
 }
-function qKey(Q){return Q.text.replace(/<[^>]*>/g,'').slice(0,80);}
+function qKey(Q){return (Q.text.replace(/<[^>]*>/g,'')+'|'+Q.choices.map(c=>c.label).join(',')).slice(0,120);}
 function nextQuestion(){
   if(!M)return;
   const total=M.boss?8:QPM;
@@ -1504,7 +1657,7 @@ function nextQuestion(){
     try{Q=w.gen(L);}catch(e){try{Q=w.gen(2);}catch(e2){Q=genOps(1);}}
     if(Q&&!S.seen.includes(qKey(Q)))break;
   }
-  S.seen.push(qKey(Q));if(S.seen.length>400)S.seen=S.seen.slice(-300);
+  const k=qKey(Q);if(!S.seen.includes(k))S.seen.push(k);if(S.seen.length>700)S.seen=S.seen.slice(-500);
   M.q=Q;M.phase='pick';M.picked=null;
   M.golden=!M.boss&&Math.random()<.12;
   $('qcard').classList.toggle('golden',M.golden);
@@ -1551,7 +1704,7 @@ function pickChoice(i){
   sfx.tap();
   [...$('choices').children].forEach((b,j)=>b.classList.toggle('picked',j===i));
   const c=M.q.choices[i];
-  const spoken=(c.say)||String(c.label).replace(/<[^>]*>/g,'');
+  const spoken=(c.say)||cleanSpoken(String(c.label));
   if(/[a-zA-Z]/.test(spoken))speak(spoken);
   const cb=$('checkBtn');if(cb)cb.disabled=false;
 }
@@ -1564,6 +1717,7 @@ function checkAnswer(){
   const L=M.boss?3:S.levels[w.id];
   M.asked++;if(L>=2)M.hi++;
   const pw=S.perWorld[w.id][L];pw.a++;
+  if(!M.boss)logHistory(c.correct,L);
   if(c.correct){
     pw.r++;
     buttons[M.picked].classList.add('correct');
@@ -1571,7 +1725,7 @@ function checkAnswer(){
     M.wstreak[w.id]=(M.wstreak[w.id]||0)+1;M.wwrong[w.id]=0;
     if(M.wstreak[w.id]>S.bestStreak)S.bestStreak=M.wstreak[w.id];
     const coin=M.golden?3:1;
-    S.coins+=coin;S.xp+=M.boss?15:10;
+    S.coins+=coin;M.coinsEarned=(M.coinsEarned||0)+coin;S.xp+=M.boss?15:10;
     if(M.boss){M.hits++;renderBossHp();sfx.hit();
       $('qcard').style.animation='hitFlash .4s';setTimeout(()=>{$('qcard').style.animation='';},420);}
     else sfx.correct();
@@ -1583,8 +1737,8 @@ function checkAnswer(){
     $('coachMsg').style.display='block';
     $('coachMsg').textContent=p+(M.golden?` Golden question! ${coin} coins.`:'');
     speak(p);
-    if(!M.boss&&M.wstreak[w.id]>=3&&S.levels[w.id]<3){
-      S.levels[w.id]++;M.wstreak[w.id]=0;
+    if(!M.boss&&M.wstreak[w.id]>=3&&S.levels[w.id]<3&&M.idx>=(M.cool[w.id]||0)){
+      S.levels[w.id]++;M.wstreak[w.id]=0;M.cool[w.id]=M.idx+3;
       queueCeremony(worldArt(w.id),'Bigger questions unlocked',`${w.name} just moved up a step. You earned it.`,()=>{sfx.levelup();});
     }
   }else{
@@ -1599,7 +1753,7 @@ function checkAnswer(){
     $('coachMsg').innerHTML=enc+(M.q.explain?`<span class="ex"></span>`:'');
     if(M.q.explain)$('coachMsg').querySelector('.ex').textContent=M.q.explain;
     speak(enc+' '+(M.q.explain||''));
-    if(!M.boss&&M.wwrong[w.id]>=2&&S.levels[w.id]>1){S.levels[w.id]--;M.wwrong[w.id]=0;}
+    if(!M.boss&&M.wwrong[w.id]>=2&&S.levels[w.id]>1&&M.idx>=(M.cool[w.id]||0)){S.levels[w.id]--;M.wwrong[w.id]=0;M.cool[w.id]=M.idx+3;}
   }
   M.idx++;
   renderPips();
@@ -1627,10 +1781,12 @@ function runCeremonies(after){
 let pendingPack=null,sessionStart=Date.now(),missionsThisSession=0;
 function endMission(){
   const won=M.boss?M.hits>=5:null;
-  const worldId=M.worldId,boss=M.boss,right=M.right,asked=M.asked,hi=M.hi;
+  const worldId=M.worldId,boss=M.boss,right=M.right,asked=M.asked,hi=M.hi,coinsEarned=M.coinsEarned||0;
   const mins=Math.max(1,Math.round((Date.now()-M.t0)/60000));
   const t=todayStr();S.playLog[t]=(S.playLog[t]||0)+mins;
-  missionsThisSession++;
+  if(!S.history[t])S.history[t]={a:0,r:0,min:0};
+  S.history[t].min+=mins;
+  missionsThisSession++;lastMissionEnd=Date.now();
   leaveQuiz();
   markPlayedToday();
   // stars
@@ -1655,7 +1811,9 @@ function endMission(){
     S.daily.done.push(goalKey);
   }
   let chestJustDone=false;
-  if(!S.daily.chest&&S.daily.done.length>=3){S.daily.chest=true;chestJustDone=true;}
+  if(!S.daily.chest&&S.daily.done.length>=3){S.daily.chest=true;chestJustDone=true;
+    queueCeremony(`<svg viewBox="0 0 24 24" width="170" height="170" style="stroke:var(--gold);fill:none;stroke-width:1.6"><use href="#i-chest"/></svg>`,
+      'Daily chest unlocked','All three missions done. A bonus card pack is inside.',()=>sfx.chest());}
   S.daily.missions++;
   // pack
   pendingPack=null;
@@ -1676,7 +1834,7 @@ function endMission(){
   $('resTitle').textContent=title;
   $('resSub').textContent=sub;
   const chips=$('resChips');chips.innerHTML='';
-  chips.innerHTML+=`<span class="chip"><svg class="icon" style="color:var(--gold)"><use href="#i-coin"/></svg>+${right*(1)} coins</span>`;
+  chips.innerHTML+=`<span class="chip"><svg class="icon" style="color:var(--gold)"><use href="#i-coin"/></svg>+${coinsEarned||right} coins</span>`;
   if(!boss&&right>=6){S.coins+=5;chips.innerHTML+=`<span class="chip"><svg class="icon" style="color:var(--coral)"><use href="#i-bolt"/></svg>Power surge +5</span>`;}
   if(chestJustDone)chips.innerHTML+=`<span class="chip"><svg class="icon" style="color:var(--gold)"><use href="#i-chest"/></svg>Daily chest open</span>`;
   $('packBtn').style.display=pendingPack?'flex':'none';
@@ -1781,8 +1939,27 @@ function renderParent(){
   const st=$('statList');
   let rows='';
   const t=todayStr();
+  rows+=`<div class="pstat"><span>Student</span><b>${esc(S.player||'Not set')}</b></div>`;
   rows+=`<div class="pstat"><span>Today’s play time</span><b>${S.playLog[t]||0} min</b></div>`;
   rows+=`<div class="pstat"><span>Days in a row</span><b>${S.streakDays}</b></div>`;
+  const days=Object.keys(S.history||{}).sort();
+  if(days.length){
+    const pct=d=>S.history[d].a?Math.round(S.history[d].r/S.history[d].a*100):0;
+    if(days.length>=6){
+      const firstD=days.slice(0,3),lastD=days.slice(-3);
+      const agg=list=>{let a=0,r=0,ls=0;list.forEach(d=>{a+=S.history[d].a;r+=S.history[d].r;ls+=S.history[d].ls||S.history[d].a;});
+        return {p:a?Math.round(r/a*100):0,s:a?(ls/a).toFixed(1):'1.0',n:a};};
+      const f=agg(firstD),l=agg(lastD);
+      rows+=`<div class="pstat"><span>First days vs now</span><b>step ${f.s} at ${f.p}% → step ${l.s} at ${l.p}%</b></div>`;
+      rows+=`<div class="pstat"><span style="font-size:12px;color:var(--ink2)">Higher step numbers mean harder questions, so steady accuracy at a higher step is real growth.</span><b></b></div>`;
+    }
+    rows+=`<div style="font-weight:800;margin:12px 0 2px;font-size:15px">Day by day</div>`;
+    days.slice(-10).forEach(d=>{
+      const h=S.history[d];
+      const short=d.slice(5).replace('-','/');
+      rows+=`<div class="pstat"><span>${short} · ${h.a} questions · ${h.min} min</span><b>${pct(d)}%</b></div>`;
+    });
+  }
   WORLDS.forEach(w=>{
     const pw=S.perWorld[w.id];
     let top=0;for(let l=3;l>=1;l--){if(pw[l].a>0){top=l;break;}}
@@ -1790,25 +1967,33 @@ function renderParent(){
     rows+=`<div class="pstat"><span>${w.name} <span class="lv">step ${top} of 3${top===3?' (2nd-grade stretch)':top===2?' (1st grade)':' (kindergarten)'}</span></span><b>${pw[top].r}/${pw[top].a} at that step</b></div>`;
   });
   st.innerHTML=(rows||'<p class="parent-note">No rounds played yet.</p>')+
-    '<button class="btn btn-quiet" id="renameBtn" style="margin-top:12px">Change student name</button>';
-  $('renameBtn').onclick=()=>{$('nameInput').value=S.player||'';$('nameMascot').innerHTML=mascotSVG('cheer',120);show('scr-name');};
+    '<button class="btn btn-quiet" id="renameBtn" style="margin-top:12px">Switch student or add a new one</button>';
+  $('renameBtn').onclick=()=>{save();renderNameScreen();show('scr-name');};
   $('parentInfo').innerHTML=`
     <h3><svg class="icon"><use href="#i-shield"/></svg>About this practice</h3>
-    <p>This game practices the same skill areas as the i-Ready Diagnostic, which Gwinnett County schools give three times a year: number sense, addition and subtraction, patterns, shapes, and measurement in math; sounds, phonics, sight words, vocabulary, and comprehension in reading. Questions are read aloud, and each world steps up or down in difficulty as your child answers. Step 1 is roughly kindergarten, step 2 first grade, step 3 a second-grade stretch.</p>
+    <p>This game practices the skill areas commonly covered by early-elementary diagnostics such as i-Ready, which Gwinnett County schools use as a screener: number sense, addition and subtraction, patterns, shapes, and measurement in math; sounds, phonics, sight words, vocabulary, and comprehension in reading. Questions are read aloud, and each world steps up or down in difficulty as your child answers. Step 1 is roughly kindergarten, step 2 first grade, step 3 a second-grade stretch.</p>
     <p><strong>Being honest about the gifted process:</strong> strong screener scores can help start a referral, and referrals can also come from a teacher or from you directly. Eligibility in Georgia then requires a separate mental-ability test score at the 96th percentile plus qualifying scores in achievement, creativity, and motivation. This app practices the achievement piece only. No app can promise a placement, and that is not the goal here. The goal is a confident kid who knows this material cold.</p>
     <p><strong>A three-week rhythm that works:</strong></p>
     <div class="weekplan"><p><strong>Week 1: math worlds.</strong> One or two 10 to 15 minute sessions a day. Let him use the read-aloud button freely. Watch the Progress list above: you want step 2 or 3 with most answers right.</p></div>
     <div class="weekplan"><p><strong>Week 2: reading worlds.</strong> Same rhythm. Revisit any math world that sits at step 1.</p></div>
     <div class="weekplan"><p><strong>Week 3: Super Mix daily.</strong> Practice the habit that matters most on test day: listen, think, then tap. The game never rewards speed on purpose, because testers flag rushed answers.</p></div>
-    <p><strong>Healthy limits are built in:</strong> a stretch break every third round, and a wind-down screen after about 15 minutes. For a five-year-old, two short sessions beat one long one, and sleep the night before the test beats everything.</p>
-    <p>Progress saves on this device. The Grown-ups tab opens with a press-and-hold so little fingers stay in the game.</p>`;
+    <p><strong>Healthy limits are built in:</strong> a stretch break every third round, and a wind-down screen after about 15 minutes of play. For young children, two short sessions beat one long one, and sleep the night before a test beats everything.</p>
+    <p>Progress saves on this device, separately for each student. Use the switch button above to move between students or add a new one. Each student keeps their own stars, cards, levels, and day-by-day history. The Grown-ups tab opens with a press-and-hold so little fingers stay in the game.</p>`;
 }
 
 /* ============ wire-up ============ */
 $('startBtn').onclick=()=>{sfx.tap();renderMap();show('scr-map');};
 $('tabMath').onclick=()=>{S.tab='math';renderMap();sfx.tap();};
 $('tabRead').onclick=()=>{S.tab='read';renderMap();sfx.tap();};
-$('quitBtn').onclick=()=>{leaveQuiz();renderMap();show('scr-map');};
+$('quitBtn').onclick=()=>{
+  if(M&&M.asked>0){
+    const t=todayStr(),mins=Math.round((Date.now()-M.t0)/60000);
+    S.playLog[t]=(S.playLog[t]||0)+mins;
+    if(!S.history[t])S.history[t]={a:0,r:0,min:0,ls:0};
+    S.history[t].min+=mins;
+    markPlayedToday();save();
+  }
+  leaveQuiz();renderMap();show('scr-map');};
 $('sayBtn').onclick=()=>{if(M&&M.q)speak(M.q.spoken);};
 $('muteBtn').onclick=()=>{
   S.muted=!S.muted;save();
@@ -1836,13 +2021,55 @@ holdToOpen($('navParent'),1200,()=>{leaveQuiz();renderParent();show('scr-parent'
 $('navParent').addEventListener('click',()=>{speak('Grown-ups only. Press and hold to open.');});
 
 /* ============ boot ============ */
+function enterAcademy(nm,isNew){
+  if(S.player)save();
+  sessionStart=Date.now();missionsThisSession=0;
+  if(ROOT.profiles[nm]){S=Object.assign(freshState(),ROOT.profiles[nm]);}
+  else{S=freshState();S.player=nm;}
+  S.player=nm;
+  if(!S.history)S.history={};
+  if(!AV_DEFS[S.avatar])S.avatar='webz';
+  S.unlockedAv=(S.unlockedAv||[]).filter(id=>AV_DEFS[id]);
+  ['webz','dash'].forEach(id=>{if(!S.unlockedAv.includes(id))S.unlockedAv.push(id);});
+  ensureWorldState();setupDaily();
+  ROOT.current=nm;save();
+  refreshTopbar();
+  sfx.fanfare();confetti(24);
+  speak(isNew?`Welcome to Doctor Sam's Academy, ${nm}. Let's train that super brain.`:`Welcome back, ${nm}. Ready to train?`);
+  renderHome();show('scr-home');
+}
 function submitName(){
   const v=($('nameInput').value||'').trim().slice(0,14);
-  const nm=v?v[0].toUpperCase()+v.slice(1):'Hero';
-  S.player=nm;save();
-  sfx.fanfare();confetti(24);
-  speak(`Welcome to Doctor Sam's Academy, ${nm}. Let's train that super brain.`);
-  renderHome();show('scr-home');
+  if(!v&&Object.keys(ROOT.profiles).length){
+    speak('Tap your hero card to start, or type a new name.');
+    $('nameInput').focus();
+    return;
+  }
+  let nm=v?v[0].toUpperCase()+v.slice(1):'Hero';
+  if(['__proto__','constructor','prototype'].includes(nm))nm='Hero';
+  const existing=Object.keys(ROOT.profiles).find(k=>k.toLowerCase()===nm.toLowerCase());
+  if(existing)nm=existing;
+  enterAcademy(nm,!ROOT.profiles[nm]);
+}
+function renderNameScreen(){
+  const row=$('profileRow');row.innerHTML='';
+  const names=Object.keys(ROOT.profiles);
+  names.forEach(nm=>{
+    const p=ROOT.profiles[nm];
+    const stars=Object.values(p.stars||{}).reduce((a,b)=>a+(b||0),0);
+    const d=document.createElement('button');
+    d.className='av';
+    d.setAttribute('aria-label','Play as '+nm);
+    d.innerHTML=avatarSVG(p.avatar||'webz')+`<span class="avname">${esc(nm)}</span><span class="price" style="color:var(--gold)">${stars} ★</span>`;
+    d.onclick=()=>enterAcademy(nm,false);
+    row.appendChild(d);
+  });
+  $('nameInput').value='';
+  $('nameInput').placeholder=names.length?'Or type a new name':'Type your name';
+  $('nameGo').textContent=names.length?'Add a new hero':'Start my training';
+  $('nameBack').style.display=(ROOT.current&&ROOT.profiles[ROOT.current])?'flex':'none';
+  $('nameBack').onclick=()=>{S=Object.assign(freshState(),ROOT.profiles[ROOT.current]);if(!S.history)S.history={};ensureWorldState();setupDaily();refreshTopbar();renderHome();show('scr-home');};
+  $('nameMascot').innerHTML=mascotSVG('cheer',120);
 }
 $('nameGo').onclick=submitName;
 $('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')submitName();});
@@ -1854,9 +2081,9 @@ ensureWorldState();
 setupDaily();
 refreshTopbar();
 if(!S.player){
-  $('nameMascot').innerHTML=mascotSVG('cheer',120);
+  renderNameScreen();
   show('scr-name');
-  speak("Welcome to Doctor Sam's Academy. Every hero has a name. What is yours?");
+  speak("Welcome to Doctor Sam's Academy. Every hero has a name. Who is training today?");
 }else{
   renderHome();
   show('scr-home');
