@@ -1528,9 +1528,7 @@ function genVocab(L){
 
 function genStory(L){
   const s=pick(STORIES[L]);
-  const spoken=L<=2
-    ? `Listen to the story. ${s.p} ... Now the question: ${s.q}`
-    : `Read the passage, then answer. The question is: ${s.q}`;
+  const spoken=`Listen to the story. ${s.p} ... Now the question: ${s.q}`;
   return q(`<span class="passage">${s.p}</span>${s.q}`,'',
     choicesFrom(s.a,s.w),s.ex||'',spoken);
 }
@@ -1678,7 +1676,7 @@ const STORIES3=[
 function genSto3(){
   const st=pick(STORIES3);
   return q(`<span class="passage">${st.p}</span>${st.q}`,'',choicesFrom(st.a,st.w),st.ex,
-    `Read the passage, then answer. The question is: ${st.q}`);
+    `Listen to the story. ${st.p} ... Now the question: ${st.q}`);
 }
 /* remap: step 1 = K+1st, step 2 = 2nd, step 3 = 3rd */
 function regrade(gOld,gNew){
