@@ -443,7 +443,13 @@
   #scr-race.lapB .race-track.arcade{border-color:rgba(157,184,255,.5);}
   #scr-race.lapC{background:linear-gradient(180deg,#160B26 0%,#2A1445 60%,#3A1D5E 100%);}
   #scr-race.lapC .race-track.arcade{border-color:rgba(255,211,78,.55);box-shadow:0 0 24px rgba(255,211,78,.15), inset 0 0 30px rgba(0,0,0,.5);}
-  #scr-race.lapC .track-road{background:repeating-linear-gradient(90deg,transparent 0 30px,rgba(255,211,78,.1) 30px 44px);}
+  #scr-race.lapC .track-road{background:repeating-linear-gradient(90deg,transparent 0 30px,rgba(255,211,78,.1) 30px 44px);animation-duration:.8s;}
+  #scr-race.lapD{background:linear-gradient(180deg,#04141C 0%,#083344 55%,#0B4A5E 100%);}
+  #scr-race.lapD .race-track.arcade{border-color:rgba(127,231,255,.6);box-shadow:0 0 30px rgba(127,231,255,.22), inset 0 0 30px rgba(0,0,0,.5);animation:iceGlow 1.4s ease-in-out infinite;}
+  #scr-race.lapD .track-road{background:repeating-linear-gradient(90deg,transparent 0 30px,rgba(127,231,255,.12) 30px 44px);animation-duration:.55s;}
+  @keyframes iceGlow{0%,100%{box-shadow:0 0 18px rgba(127,231,255,.15), inset 0 0 30px rgba(0,0,0,.5)}50%{box-shadow:0 0 34px rgba(127,231,255,.35), inset 0 0 30px rgba(0,0,0,.5)}}
+  .qtimer{height:12px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin:2px 0 10px;}
+  .qtimer>div{height:100%;width:100%;border-radius:99px;background:linear-gradient(90deg,#22C55E,#F5B02E,#DC2626);transition:width 1s linear;}
 </style>
 </head>
 <body>
@@ -610,6 +616,7 @@
     <div class="race-track arcade" id="raceTrack"></div>
     <div class="qcard arcade" id="raceCard">
       <div class="wtag" id="raceTag"></div>
+      <div class="qtimer" id="raceTimer" style="display:none"><div id="raceTimerFill"></div></div>
       <div class="qtext" id="rqtext"></div>
       <div class="qvisual" id="rqvisual"></div>
       <div class="say-row"><button class="say" id="rsayBtn"><svg class="icon"><use href="#i-speaker"/></svg><span>Read it to me</span></button></div>
@@ -963,7 +970,16 @@ function genNumber(L){
       more?'More means the bigger group.':'Fewer means the smaller group.',`Which group has ${more?'more':'fewer'}? Count both groups.`);
   }
   if(L===2){
-    const t=rint(1,4);
+    const t=rint(1,6);
+    if(t===5){const line=['🐶','🐱','🐰','🐢','🦊'];const spot=rint(1,5);
+      const ord=['first','second','third','fourth','fifth'];
+      return q(`The animals are in line. Which one is ${ord[spot-1]}?`,
+        `<span style="font-size:34px">${line.join(' ')}</span>`,
+        choicesFrom(line[spot-1],line.filter((_,i)=>i!==spot-1).slice(0,3),{n:4}),
+        `Count from the left: the ${ord[spot-1]} one.`,`The animals are in a line. Which one is ${ord[spot-1]}? Count from the left.`);}
+    if(t===6){const words=[['eleven',11],['twelve',12],['thirteen',13],['fourteen',14],['fifteen',15],['sixteen',16],['eighteen',18],['twenty',20]];
+      const [wd,n]=pick(words);
+      return q(`Which number is “${wd}”?`,'',numChoices(n,[n-1,n+1,n+10],5,30),`${cap(wd)} is written ${n}.`,`Which number is ${wd}?`);}
     if(t===1){const ones=rint(1,9);const n=10+ones;
       return q(`1 ten and ${ones} ones. What number is that?`,tenFrame(10)+tenFrame(ones),
         numChoices(n,[ones,ones+1,n+10,Number(''+ones+'1')],1,99),`One full ten frame is 10. Ten and ${ones} more is ${n}.`,`I have 1 ten and ${ones} ones. What number is that?`);}
@@ -1012,8 +1028,12 @@ function genOps(L){
     if(t===3){const have=rint(2,8);
       return q(`How many more to make 10?`,tenFrame(have),
         numChoices(10-have,[have,10,10-have+1],0,10),`${have} and ${10-have} make 10.`,`The frame shows ${have}. How many more to make 10?`);}
-    if(t===4){const d=rint(2,9);
-      return q(`${d} + ${d} = ?`,'',numChoices(d+d,[d+d-1,d+d+1,d],2,20),`Doubles: ${d} and ${d} make ${d+d}.`,`What is ${d} plus ${d}?`);}
+    if(t===4){
+      if(rint(0,1)){const d=rint(2,9);
+        return q(`${d} + ${d} = ?`,'',numChoices(d+d,[d+d-1,d+d+1,d],2,20),`Doubles: ${d} and ${d} make ${d+d}.`,`What is ${d} plus ${d}?`);}
+      const a=rint(3,9),b=rint(2,8);const tot=a+b;
+      return q(`${a} + ${b} = ${tot}. So ${tot} − ${b} = ?`,'',
+        numChoices(a,[b,tot,a+1],0,20),`They are a fact family: if ${a} plus ${b} is ${tot}, then ${tot} minus ${b} is ${a}.`,`${a} plus ${b} equals ${tot}. So ${tot} minus ${b} equals what?`);}
     const a=rint(2,8);const total=rint(a+2,Math.min(a+9,15));
     if(rint(0,1))return q(`${a} + __ = ${total}`,'',numChoices(total-a,[total,a,total-a+1],0,15),`${a} plus ${total-a} makes ${total}.`,`${a} plus what number makes ${total}?`);
     return q(`Break apart ${total}. It is ${a} and how many more?`,'',numChoices(total-a,[a,total,total-a-1],0,15),`${total} breaks into ${a} and ${total-a}.`,`${total} breaks into ${a} and how many more?`);
@@ -1142,7 +1162,12 @@ function genMeasure(L){
       choicesFrom('At night',['In the morning','At lunchtime'],{n:3}),'The moon comes out at night.');
   }
   if(L===2){
-    const t=rint(1,4);
+    const t=rint(1,5);
+    if(t===5){const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const i=rint(0,5);
+      return q(`What day comes right after ${days[i]}?`,'',
+        choicesFrom(days[i+1],shuffle(days.filter((_,x)=>x!==i+1&&x!==i)).slice(0,3)),
+        `${days[i]}, then ${days[i+1]}.`,`What day of the week comes right after ${days[i]}?`);}
     if(t===1){const h=rint(1,12);
       return q('What time is it?',clockSVG(h,0),
         choicesFrom(`${h}:00`,[`${(h%12)+1}:00`,`${h===1?12:h-1}:00`,`${h}:30`]),`The short hand points at ${h}, so it is ${h} o’clock.`,'What time does the clock show?');}
@@ -1291,7 +1316,13 @@ const CLOZE=[
   [2,'The dog ran ___ the table.','under',['until','uncle','upon']],
   [3,'I know ___ the sun sets.','why',['who','was','wow']],
   [3,'They ___ a shiny rock at the beach.','found',['fond','fund','from']],
-  [3,'___ shoes are these?','Whose',['Where','What','When']]
+  [3,'___ shoes are these?','Whose',['Where','What','When']],
+  [1,'The sun is ___ today.','out',['off','on','odd']],
+  [1,'I ___ my mom.','love',['live','leaf','lot']],
+  [2,'We saw a bird ___ its nest.','build',['built','bald','blend']],
+  [2,'Please put the books ___ the shelf.','on',['in','of','if']],
+  [3,'He knew the answer ___ he studied.','because',['before','beside','between']],
+  [3,'The team played well, ___ they lost.','but',['because','both','been']]
 ];
 const OPPOSITES=[
   ['big','small',['tall','round','wide']],['hot','cold',['warm','wet','dry']],['fast','slow',['quick','loud','tall']],
@@ -1381,7 +1412,9 @@ const STORIES={
     {p:'Nia draws a sun. She uses her yellow crayon.',q:'What does Nia use?',a:'A yellow crayon',w:['A red marker','A paintbrush','A pencil'],ex:'She uses her yellow crayon.'},
     {p:'The pup digs a hole. He hides his bone in it.',q:'What does the pup hide?',a:'His bone',w:['His ball','His sock','His hat'],ex:'He hides his bone in the hole.'},
     {p:'Ana claps for her team. They win the big game.',q:'Who wins the game?',a:'Her team',w:['The other team','Nobody','The coach'],ex:'The story says they win.'},
-    {p:'It is hot today. We eat cold ice pops on the steps.',q:'What do they eat?',a:'Cold ice pops',w:['Hot soup','Warm bread','Big apples'],ex:'They eat cold ice pops because it is hot.'}
+    {p:'It is hot today. We eat cold ice pops on the steps.',q:'What do they eat?',a:'Cold ice pops',w:['Hot soup','Warm bread','Big apples'],ex:'They eat cold ice pops because it is hot.'},
+    {p:'Max has a red kite. The wind takes it up, up, up.',q:'What takes the kite up?',a:'The wind',w:['A bird','His dad','A rope'],ex:'The wind takes the kite up.'},
+    {p:'The hen sits on her eggs. Soon, three chicks pop out.',q:'How many chicks pop out?',a:'Three',w:['One','Five','Ten'],ex:'The story says three chicks.'}
   ],
   2:[
     {p:'Zoe lost her tooth at lunch. She was scared at first, but her teacher smiled and gave her a tiny tooth box. Zoe felt better.',q:'How did Zoe feel at the end?',a:'Better',w:['Scared','Angry','Sleepy'],ex:'She was scared at first, but the teacher helped, so she felt better.'},
@@ -1395,7 +1428,9 @@ const STORIES={
     {p:'First the tadpole swims in the pond. Next it grows two back legs. Last it becomes a frog and hops onto land.',q:'What happens last?',a:'It becomes a frog',w:['It swims in the pond','It grows back legs','It turns into a fish'],ex:'The word last tells you: it becomes a frog.'},
     {p:'Dee planted two seeds. She watered one every day and forgot the other. Only the watered seed grew into a flower.',q:'Why did only one seed grow?',a:'Only one seed got water',w:['One seed was bigger','A bird took one','The sun was too hot'],ex:'The watered seed grew, the forgotten one did not.'},
     {p:'The wind blew off Papa\'s hat. It rolled down the street, bounced off a bench, and landed right on a sleeping dog.',q:'Where did the hat land?',a:'On a sleeping dog',w:['On the bench','In a tree','In the river'],ex:'The hat landed right on the dog.'},
-    {p:'Ruby practiced tying her shoes every night. At first the loops fell apart. On Friday, she tied a perfect bow all by herself.',q:'How did Ruby learn to tie her shoes?',a:'She practiced every night',w:['Her shoes tied themselves','She bought new shoes','She asked a wizard'],ex:'Nightly practice made it work.'}
+    {p:'Ruby practiced tying her shoes every night. At first the loops fell apart. On Friday, she tied a perfect bow all by herself.',q:'How did Ruby learn to tie her shoes?',a:'She practiced every night',w:['Her shoes tied themselves','She bought new shoes','She asked a wizard'],ex:'Nightly practice made it work.'},
+    {p:'The class planted a garden. Nia watered the beans, Sam pulled the weeds, and Mr. Cole built a small fence to keep rabbits out.',q:'Why did Mr. Cole build a fence?',a:'To keep rabbits out',w:['To hold the water','To grow taller beans','To sit on'],ex:'The fence kept rabbits out of the garden.'},
+    {p:'A storm knocked out the lights, so Papa lit candles. We told stories in the flicker and laughed so hard we forgot the dark.',q:'What did the family do when the lights went out?',a:'Told stories by candlelight',w:['Went to the store','Fixed the wires','Fell asleep right away'],ex:'They lit candles and told stories.'}
   ],
   3:[
     {p:'Cheetahs are the fastest land animals on Earth. They can run 70 miles per hour, but only for a short time. Then they must rest and catch their breath.',q:'What is the main idea?',a:'Cheetahs are very fast runners',w:['Cheetahs love to sleep','Cheetahs live in water','Cheetahs eat plants'],ex:'Every sentence is about how fast cheetahs are.'},
@@ -1410,16 +1445,23 @@ const STORIES={
     {p:'Astronauts float inside the space station because they are falling around Earth. Their food is strapped down so it does not drift away. Even their sleeping bags are tied to the wall.',q:'Why is the food strapped down?',a:'So it does not float away',w:['So no one eats it','To keep it warm','Because it is heavy'],ex:'Everything floats, so food must be strapped down.'},
     {p:'Jaya wanted the last swing, but a smaller kid was waiting too. She let him go first and pushed him high. His giant smile made her feel great.',q:'What does this story teach?',a:'Being kind feels good',w:['Swings are boring','Always go first','Small kids are slow'],ex:'Letting him go first made her feel great.'},
     {p:'A seed needs three things to grow: soil, water, and sunlight. The soil holds the roots. Water and sunlight give the plant energy to stretch up tall.',q:'Which is NOT something a seed needs?',a:'Candy',w:['Soil','Water','Sunlight'],ex:'The passage lists soil, water, and sunlight.'},
-    {p:'Tom\'s kite crashed into the sand three times. He moved his hands lower on the string, ran faster, and the kite finally soared over the waves.',q:'What happened after Tom changed his grip and ran faster?',a:'The kite soared',w:['The kite crashed again','The string broke','It started to rain'],ex:'His changes made the kite fly.'}
+    {p:'Tom\'s kite crashed into the sand three times. He moved his hands lower on the string, ran faster, and the kite finally soared over the waves.',q:'What happened after Tom changed his grip and ran faster?',a:'The kite soared',w:['The kite crashed again','The string broke','It started to rain'],ex:'His changes made the kite fly.'},
+    {p:'Emperor penguins take turns standing on the outside of their huddle, where the icy wind blows hardest. After a while, the outside birds rotate into the warm middle and others take their place.',q:'Why do the penguins rotate places?',a:'So everyone gets a turn in the warm middle',w:['To practice marching','To find fish faster','To scare away seals'],ex:'Rotating shares the warm middle spot fairly.'},
+    {p:'Lightning is hotter than the surface of the sun, but it lasts less than a second. Thunder is the sound of air exploding outward from that heat. You see lightning first because light travels faster than sound.',q:'Why do you see lightning before you hear thunder?',a:'Light travels faster than sound',w:['Thunder is shy','Lightning is louder','Your eyes are slower'],ex:'Light reaches you faster than sound does.'}
   ]
 };
 
 /* ============ READING generators ============ */
 function genSounds(L){
   if(L===1){
-    if(rint(0,1)){const [base,rh,no]=pick(RHYME_FAMS);const good=pick(rh);
+    const t1=rint(1,3);
+    if(t1===1){const [base,rh,no]=pick(RHYME_FAMS);const good=pick(rh);
       return q(`Which word rhymes with “${base}”?`,'',choicesFrom(good,shuffle(no)),
         `${cap(base)} and ${good} end with the same sound.`,`Which word rhymes with ${base}?`);}
+    if(t1===3){const [base,rh,no]=pick(RHYME_FAMS);const odd=pick(no);
+      return q(`Which word does NOT rhyme with “${base}”?`,'',
+        choicesFrom(odd,shuffle(rh).slice(0,3)),
+        `${cap(odd)} ends with a different sound.`,`Which word does not rhyme with ${base}?`);}
     const [w,e,same,diff]=pick(BEGIN_SOUNDS);const good=pick(same);
     return q(`Which word starts with the same sound as “${w}”?`,`<span style="font-size:44px">${e}</span>`,
       choicesFrom(good,shuffle(diff)),`${cap(w)} and ${good} both start with the same sound.`,`Which word starts with the same sound as ${w}?`);
@@ -1506,9 +1548,15 @@ function genSight(L){
 
 function genVocab(L){
   if(L===1){
-    if(rint(0,1)){const [cat2,good,wrongs]=pick(CATEGORIES);
+    const t0=rint(1,3);
+    if(t0===1){const [cat2,good,wrongs]=pick(CATEGORIES);
       return q(`Which one is ${cat2}?`,'',choicesFrom(cap(good),wrongs.map(cap)),
         `${cap(good)} is ${cat2}.`,`Which one is ${cat2}?`);}
+    if(t0===3){const sets=[['apple','banana','grape','truck','fruits'],['dog','cat','horse','chair','animals'],['red','blue','green','seven','colors'],['sock','shoe','hat','pizza','things you wear']];
+      const [a,b,c,odd,label]=pick(sets);
+      return q(`Which one does NOT belong?`,'',
+        choicesFrom(cap(odd),[a,b,c].map(cap)),
+        `${cap(a)}, ${b}, and ${c} are ${label}. ${cap(odd)} is not.`,`Which one does not belong? ${a}, ${b}, ${c}, or ${odd}?`);}
     const [a,b,wr]=pick(OPPOSITES);
     return q(`What is the opposite of “${a}”?`,'',choicesFrom(b,wr),
       `${cap(a)} and ${b} are opposites.`,`What is the opposite of ${a}?`);
@@ -1692,16 +1740,17 @@ function regrade(gOld,gNew){
   return function(L){
     if(L===1)return gOld(rint(1,2));
     if(L===2)return gOld(3);
-    return gNew();
+    return gNew?gNew():gOld(3);
   };
 }
+function maxLvlFor(w){return w.sub==='math'?2:3;}
 /* ============ worlds ============ */
 const WORLDS=[
-  {id:'num',sub:'math',name:'Number City',skill:'Counting & place value',gen:regrade(genNumber,genNum3)},
-  {id:'ops',sub:'math',name:'Add & Subtract Arena',skill:'Adding & taking away',gen:regrade(genOps,genOps3)},
-  {id:'pat',sub:'math',name:'Pattern Planet',skill:'Patterns & missing numbers',gen:regrade(genPattern,genPat3)},
-  {id:'shp',sub:'math',name:'Shape Galaxy',skill:'Flat & solid shapes',gen:regrade(genShape,genShp3)},
-  {id:'mea',sub:'math',name:'Measure Mountain',skill:'Time, length & charts',gen:regrade(genMeasure,genMea3)},
+  {id:'num',sub:'math',name:'Number City',skill:'Counting & place value',gen:regrade(genNumber,null)},
+  {id:'ops',sub:'math',name:'Add & Subtract Arena',skill:'Adding & taking away',gen:regrade(genOps,null)},
+  {id:'pat',sub:'math',name:'Pattern Planet',skill:'Patterns & missing numbers',gen:regrade(genPattern,null)},
+  {id:'shp',sub:'math',name:'Shape Galaxy',skill:'Flat & solid shapes',gen:regrade(genShape,null)},
+  {id:'mea',sub:'math',name:'Measure Mountain',skill:'Time, length & charts',gen:regrade(genMeasure,null)},
   {id:'snd',sub:'read',name:'Sound Cave',skill:'Rhymes & listening',gen:regrade(genSounds,genSnd3)},
   {id:'phn',sub:'read',name:'Phonics Forest',skill:'Letters & sounding out',gen:regrade(genPhonics,genPhn3)},
   {id:'sgt',sub:'read',name:'Sight Word Speedway',skill:'Words you just know',gen:regrade(genSight,genSgt3)},
@@ -1713,6 +1762,7 @@ function worldById(id){return WORLDS.find(w=>w.id===id);}
 function ensureWorldState(){
   WORLDS.forEach(w=>{
     if(!S.levels[w.id])S.levels[w.id]=1;
+    if(S.levels[w.id]>maxLvlFor(w))S.levels[w.id]=maxLvlFor(w);
     if(!S.stars[w.id])S.stars[w.id]=S.stars[w.id]||0;
     if(!S.perWorld[w.id])S.perWorld[w.id]={1:{a:0,r:0},2:{a:0,r:0},3:{a:0,r:0}};
   });
@@ -1867,7 +1917,7 @@ function renderMap(){
     if(S.crowns[w.id])inner+=`<span class="crown-chip"><svg class="icon" style="stroke:#fff"><use href="#i-crown"/></svg></span>`;
     inner+=`<div class="art">${worldArt(w.id)}</div>
       <div class="wname">${w.name}</div><div class="wskill">${w.skill}</div>
-      <div class="lvl-dots">${[1,2,3].map(i=>`<i class="${i<=lvl?'on':''}"></i>`).join('')}</div>
+      <div class="lvl-dots">${Array.from({length:maxLvlFor(w)},(_,x)=>x+1).map(i=>`<i class="${i<=lvl?'on':''}"></i>`).join('')}</div>
       <div class="star-row">${[1,2,3].map(i=>starSVG(i<=(S.stars[w.id]||0))).join('')}</div>`;
     d.innerHTML=inner;
     d.setAttribute('role','button');
@@ -1936,15 +1986,15 @@ function nextQuestion(){
   const w=M.qWorld;
   const L=M.boss?2:S.levels[w.id];
   let Q=null;
-  for(let tries=0;tries<7;tries++){
+  for(let tries=0;tries<30;tries++){
     try{Q=w.gen(L);}catch(e){try{Q=w.gen(2);}catch(e2){Q=genOps(1);}}
     if(Q&&!S.seen.includes(qKey(Q)))break;
   }
-  const k=qKey(Q);if(!S.seen.includes(k))S.seen.push(k);if(S.seen.length>700)S.seen=S.seen.slice(-500);
+  const k=qKey(Q);if(!S.seen.includes(k))S.seen.push(k);if(S.seen.length>1600)S.seen=S.seen.slice(-1200);
   M.q=Q;M.phase='pick';M.picked=null;
   M.golden=!M.boss&&Math.random()<.12;
   $('qcard').classList.toggle('golden',M.golden);
-  $('worldTag').textContent=M.boss?`${w.name} boss battle ${BOSSES[w.id]||''}`:`${w.name} · step ${L} of 3`;
+  $('worldTag').textContent=M.boss?`${w.name} boss battle ${BOSSES[w.id]||''}`:`${w.name} · step ${L} of ${maxLvlFor(w)}`;
   renderPips();if(M.boss)renderBossHp();
   $('qtext').innerHTML=Q.text;
   $('qvisual').innerHTML=Q.visual||'';
@@ -2020,7 +2070,7 @@ function checkAnswer(){
     $('coachMsg').style.display='block';
     $('coachMsg').textContent=p+(M.golden?` Golden question! ${coin} coins.`:'');
     speak(p);
-    if(!M.boss&&M.wstreak[w.id]>=3&&S.levels[w.id]<3&&M.idx>=(M.cool[w.id]||0)){
+    if(!M.boss&&M.wstreak[w.id]>=3&&S.levels[w.id]<maxLvlFor(w)&&M.idx>=(M.cool[w.id]||0)){
       S.levels[w.id]++;M.wstreak[w.id]=0;M.cool[w.id]=M.idx+3;
       queueCeremony(worldArt(w.id),'Bigger questions unlocked',`${w.name} just moved up a step. You earned it.`,()=>{sfx.levelup();});
     }
@@ -2247,14 +2297,14 @@ function renderParent(){
     const pw=S.perWorld[w.id];
     let top=0;for(let l=3;l>=1;l--){if(pw[l].a>0){top=l;break;}}
     if(top===0)return;
-    rows+=`<div class="pstat"><span>${w.name} <span class="lv">step ${top} of 3${top===3?' (3rd grade)':top===2?' (2nd grade)':' (kindergarten + 1st)'}</span></span><b>${pw[top].r}/${pw[top].a} at that step</b></div>`;
+    rows+=`<div class="pstat"><span>${w.name} <span class="lv">step ${top} of ${w.sub==='math'?2:3}${top===3?' (3rd grade)':top===2?' (2nd grade)':' (kindergarten + 1st)'}</span></span><b>${pw[top].r}/${pw[top].a} at that step</b></div>`;
   });
   st.innerHTML=(rows||'<p class="parent-note">No rounds played yet.</p>')+
     '<button class="btn btn-quiet" id="renameBtn" style="margin-top:12px">Switch student or add a new one</button>';
   $('renameBtn').onclick=()=>{save();renderNameScreen();show('scr-name');};
   $('parentInfo').innerHTML=`
     <h3><svg class="icon"><use href="#i-shield"/></svg>About this practice</h3>
-    <p>This game practices the skill areas commonly covered by early-elementary diagnostics such as i-Ready, which Gwinnett County schools use as a screener: number sense, addition and subtraction, patterns, shapes, and measurement in math; sounds, phonics, sight words, vocabulary, and comprehension in reading. Questions are read aloud, and each world steps up or down in difficulty as your child answers. Step 1 blends kindergarten and first grade, step 2 is second grade, and step 3 is a third-grade stretch, the same way i-Ready can reach several grade levels above.</p>
+    <p>This game practices the skill areas commonly covered by early-elementary diagnostics such as i-Ready, which Gwinnett County schools use as a screener: number sense, addition and subtraction, patterns, shapes, and measurement in math; sounds, phonics, sight words, vocabulary, and comprehension in reading. Questions are read aloud, and each world steps up or down in difficulty as your child answers. Step 1 blends kindergarten and first grade, and step 2 is second grade. Math tops out at the second-grade standard by design; reading adds a third-grade stretch step, the same way i-Ready can reach above grade level.</p>
     <p><strong>Being honest about the gifted process:</strong> strong screener scores can help start a referral, and referrals can also come from a teacher or from you directly. Eligibility in Georgia then requires a separate mental-ability test score at the 96th percentile plus qualifying scores in achievement, creativity, and motivation. This app practices the achievement piece only. No app can promise a placement, and that is not the goal here. The goal is a confident kid who knows this material cold.</p>
     <p><strong>A three-week rhythm that works:</strong></p>
     <div class="weekplan"><p><strong>Week 1: math worlds.</strong> One or two 10 to 15 minute sessions a day. Let him use the read-aloud button freely. Watch the Progress list above: you want step 2 or 3 with most answers right.</p></div>
@@ -2293,10 +2343,10 @@ function musicStart(lap){
   musicStop();
   const g=c.createGain();g.gain.value=.05;g.connect(c.destination);
   music.gain=g;music.playing=true;music.step=0;music.urgent=false;
-  const bpm=[106,124,142][lap]||120;
+  const bpm=[106,124,142,158][lap]||120;
   const stepMs=(60/bpm/2)*1000;
-  const bass=[[110,110,131,98],[110,131,147,110],[131,156,175,196]][lap];
-  const arp=[[220,262,330,262],[220,277,330,415],[262,330,415,523]][lap];
+  const bass=[[110,110,131,98],[110,131,147,110],[131,156,175,196],[147,175,196,220]][lap]||[110,110,131,98];
+  const arp=[[220,262,330,262],[220,277,330,415],[262,330,415,523],[330,415,523,659]][lap]||[220,262,330,262];
   music.timer=setInterval(()=>{
     if(!music.playing||!music.gain)return;
     const t=c.currentTime,s8=music.step%8;
@@ -2321,10 +2371,12 @@ const RACERS=[
 ];
 const GP_REQ_A=50,GP_REQ_R=30,GP_SEG=8,GP_MAXQ=12;
 const GP_LAPS=[
-  {name:'Bronze Sprint',color:'#E8A365',std:'Kindergarten and 1st grade standard',lvl:()=>1,riv:[.5,.46,.42]},
-  {name:'Silver Circuit',color:'#D7DEE9',std:'2nd grade standard',lvl:()=>2,riv:[.56,.52,.48]},
-  {name:'Gold Final',color:'#FFD34E',std:'3rd grade standard',lvl:()=>3,riv:[.6,.56,.52]}
+  {name:'Bronze Sprint',color:'#E8A365',std:'Kindergarten and 1st grade standard',lvl:()=>1,riv:[.5,.46,.42],timer:0},
+  {name:'Silver Circuit',color:'#D7DEE9',std:'2nd grade standard',lvl:()=>2,riv:[.56,.52,.48],timer:30},
+  {name:'Gold Final',color:'#FFD34E',std:'3rd grade reading, 2nd grade math',lvl:()=>3,riv:[.6,.56,.52],timer:20},
+  {name:'Diamond Legend',color:'#7FE7FF',std:'Champion mix, 15 seconds a question',lvl:()=>3,riv:[.64,.6,.56],timer:15}
 ];
+const GP_TOTAL=GP_LAPS.length;
 function gpQual(){
   const h=S.history[todayStr()]||{a:0,r:0};
   return {m:Math.min(3,S.daily.done.length),a:h.a,r:h.r,
@@ -2341,11 +2393,11 @@ function startRace(){
   document.body.classList.add('race-mode');
   show('scr-race');
   renderLap();
-  speak('Grand Prix. Three laps. Every right answer makes you dash. Beat all three racers to the trophy.');
+  speak(`Grand Prix. ${GP_TOTAL} laps, each wilder than the last. Every right answer makes you dash. Beat all three racers to the trophy.`);
   countdown(()=>raceQuestion());
 }
 function exitRace(){
-  R=null;hushed();musicStop();
+  clearQTimer();R=null;hushed();musicStop();
   document.body.classList.remove('race-mode');
   $('countOverlay').classList.remove('open');
   renderHome();show('scr-home');
@@ -2354,7 +2406,7 @@ function countdown(cb){
   const ov=$('countOverlay'),num=$('countNum');
   const seq=['3','2','1','GO!'];let i=0;
   ov.classList.add('open');
-  $('countSub').textContent=GP_LAPS[R.lap].name+' · '+GP_LAPS[R.lap].std;
+  $('countSub').textContent=GP_LAPS[R.lap].name+' · '+GP_LAPS[R.lap].std+(GP_LAPS[R.lap].timer?` · ${GP_LAPS[R.lap].timer}s clock`:'');
   const step=()=>{
     if(!R){ov.classList.remove('open');return;}
     if(i>=seq.length){ov.classList.remove('open');musicStart(R.lap);cb();return;}
@@ -2367,8 +2419,8 @@ function countdown(cb){
 }
 function renderLap(){
   const lap=GP_LAPS[R.lap];
-  $('lapLabel').textContent=`LAP ${R.lap+1} of 3 · ${lap.name}`;
-  const scr=$('scr-race');scr.classList.remove('lapA','lapB','lapC');scr.classList.add(['lapA','lapB','lapC'][R.lap]);
+  $('lapLabel').textContent=`LAP ${R.lap+1} of ${GP_TOTAL} · ${lap.name}`;
+  const scr=$('scr-race');scr.classList.remove('lapA','lapB','lapC','lapD');scr.classList.add(['lapA','lapB','lapC','lapD'][R.lap]);
   $('lapCup').style.color=lap.color;$('lapCup').style.background=lap.color;
   renderTrack();
 }
@@ -2396,13 +2448,55 @@ function moveRacer(i,boost){
   el.style.left=(Math.min(R.pos[i],GP_SEG)/GP_SEG*78)+'%';
   if(i===0&&boost){el.classList.add('boost');setTimeout(()=>el.classList.remove('boost'),900);}
 }
+function clearQTimer(){if(R&&R.timerId){clearInterval(R.timerId);R.timerId=null;}}
+function startQTimer(){
+  const lim=GP_LAPS[R.lap].timer;
+  const bar=$('raceTimer');
+  if(!lim){bar.style.display='none';return;}
+  bar.style.display='block';
+  R.timeLeft=lim;
+  $('raceTimerFill').style.width='100%';
+  R.timerId=setInterval(()=>{
+    if(!R||R.answered){clearQTimer();return;}
+    if('speechSynthesis' in window&&speechSynthesis.speaking)return; // clock waits while the story is read
+    R.timeLeft--;
+    $('raceTimerFill').style.width=Math.max(0,R.timeLeft/lim*100)+'%';
+    if(R.timeLeft<=5&&R.timeLeft>0)sfx.beep(660);
+    if(R.timeLeft<=0){clearQTimer();raceTimeout();}
+  },1000);
+}
+function raceTimeout(){
+  if(!R||R.answered)return;
+  R.answered=true;R.streak=0;
+  const {Q}=R.cur;
+  const buttons=[...$('rchoices').children];
+  buttons.forEach(b=>b.disabled=true);
+  const ci=Q.choices.findIndex(x=>x.correct);
+  if(ci>=0)buttons[ci].classList.add('reveal');
+  logHistory(false,R.cur.L);
+  sfx.wrong();
+  $('rcoachArt').innerHTML=mascotSVG('idle',40);
+  $('rcoachMsg').style.display='block';
+  $('rcoachMsg').textContent='Time! The pack surges past.';
+  GP_LAPS[R.lap].riv.forEach((p,ri)=>{if(R.pos[ri+1]<GP_SEG&&Math.random()<p+.18){R.pos[ri+1]++;moveRacer(ri+1);}});
+  updatePositions();refreshTopbar();save();
+  R.q++;
+  setTimeout(raceQuestion,2600);
+}
 function raceQuestion(){
   if(!R)return;
+  clearQTimer();
   if(R.pos[0]>=GP_SEG){lapComplete();return;}
   if(Math.max(R.pos[1],R.pos[2],R.pos[3])>=GP_SEG||R.q>=GP_MAXQ){raceOver(false);return;}
   const w=pick(WORLDS.filter(x=>x.sub===(R.q%2===0?'math':'read')));
-  const L=GP_LAPS[R.lap].lvl();
-  let Q;try{Q=w.gen(L);}catch(e){Q=genOps(1);}
+  const baseL=GP_LAPS[R.lap].lvl();
+  const L=w.sub==='math'?Math.min(2,baseL):baseL;
+  let Q=null;
+  for(let tries=0;tries<30;tries++){
+    try{Q=w.gen(L);}catch(e){Q=genOps(1);}
+    if(Q&&!S.seen.includes(qKey(Q)))break;
+  }
+  const rk=qKey(Q);if(!S.seen.includes(rk))S.seen.push(rk);if(S.seen.length>1600)S.seen=S.seen.slice(-1200);
   R.cur={Q,L,w};R.answered=false;
   $('raceTag').textContent=`${w.name} · question ${R.q+1} of ${GP_MAXQ}`;
   $('rqtext').innerHTML=Q.text;
@@ -2420,6 +2514,7 @@ function raceQuestion(){
     box.appendChild(b);
   });
   speak(Q.spoken);
+  startQTimer();
 }
 function turboFlash(txt){
   if(reduceMotion)return;
@@ -2430,7 +2525,7 @@ function turboFlash(txt){
 }
 function raceAnswer(i){
   if(!R||R.answered)return;
-  R.answered=true;
+  R.answered=true;clearQTimer();
   const {Q,L}=R.cur;
   const c=Q.choices[i];
   const buttons=[...$('rchoices').children];
@@ -2478,9 +2573,10 @@ function lapComplete(){
   R.lap++;
   if(done===0){S.coins+=5;R.coins+=5;}
   if(done===1){S.coins+=10;R.coins+=10;}
+  if(done===2){S.coins+=15;R.coins+=15;}
   save();refreshTopbar();
   musicStop();
-  if(R.lap>=3){raceOver(true);return;}
+  if(R.lap>=GP_TOTAL){raceOver(true);return;}
   sfx.lapUp();confetti(14);
   const lf=document.createElement('div');
   lf.className='lap-flash';
@@ -2510,7 +2606,7 @@ function raceOver(champion){
   document.body.classList.remove('race-mode');
   const first=!S.daily.raceWon;
   if(champion){
-    S.coins+=20;S.gpWins=(S.gpWins||0)+1;
+    S.coins+=25;S.gpWins=(S.gpWins||0)+1;
     if(first){S.daily.raceWon=true;pendingPack={min:'epic'};}
     else pendingPack=null;
     save();refreshTopbar();
@@ -2518,16 +2614,16 @@ function raceOver(champion){
     $('resMascot').innerHTML=podium;
     $('resStars').innerHTML='';
     $('resTitle').textContent='GRAND PRIX CHAMPION';
-    $('resSub').textContent=`All three laps conquered. Grand Prix wins: ${S.gpWins}.`;
-    $('resChips').innerHTML=`<span class="chip">+${coins+20} coins</span>`+(first?'<span class="chip">Epic card pack</span>':'');
+    $('resSub').textContent=`All ${GP_TOTAL} laps conquered. Grand Prix wins: ${S.gpWins}.`;
+    $('resChips').innerHTML=`<span class="chip">+${coins+25} coins</span>`+(first?'<span class="chip">Epic card pack</span>':'');
     $('packBtn').style.display=first&&pendingPack?'flex':'none';
     speak(`Grand Prix champion, ${S.player}! You conquered all three laps. Incredible.`);
   }else{
     save();refreshTopbar();
     $('resMascot').innerHTML=podium;
     $('resStars').innerHTML='';
-    $('resTitle').textContent=`The ${GP_LAPS[Math.min(lapReached-1,2)].name} got you`;
-    $('resSub').textContent=`You reached lap ${lapReached} of 3 and earned ${coins} coins. Jump back in!`;
+    $('resTitle').textContent=`The ${GP_LAPS[Math.min(lapReached-1,GP_TOTAL-1)].name} got you`;
+    $('resSub').textContent=`You reached lap ${lapReached} of ${GP_TOTAL} and earned ${coins} coins. Jump back in!`;
     $('resChips').innerHTML=coins?`<span class="chip">+${coins} coins</span>`:'';
     $('packBtn').style.display='none';
     speak(`So close! You reached lap ${lapReached}. Race again and take the trophy.`);
