@@ -362,6 +362,80 @@
   @media (max-width:380px){
     .qtext{font-size:19px;} .choice{font-size:18px;} h1{font-size:24px;}
   }
+
+  /* ---------- grand prix arcade ---------- */
+  body.race-mode{background:#0B1026;}
+  #scr-race{background:linear-gradient(180deg,#0B1026 0%,#141B3C 60%,#1B234A 100%);
+    margin:-12px -16px -96px;padding:14px 16px 30px;min-height:100dvh;border-radius:0;}
+  .lap-banner{display:flex;align-items:center;gap:10px;margin-bottom:12px;color:#fff;}
+  .lap-banner .lap-title{font-size:17px;font-weight:900;letter-spacing:.04em;flex:1;}
+  .lap-banner .cup-dot{width:14px;height:14px;border-radius:50%;box-shadow:0 0 10px currentColor;}
+  .lap-banner .iconbtn{color:#8FA0D0;}
+  .race-track.arcade{background:#0E1533;border:2px solid #2A3566;border-radius:20px;
+    box-shadow:0 0 0 1px rgba(255,255,255,.03), inset 0 0 30px rgba(0,0,0,.5);overflow:hidden;position:relative;padding:8px 10px;}
+  .race-track.arcade .lane{height:52px;border-bottom:2px solid rgba(255,255,255,.06);position:relative;overflow:visible;}
+  .race-track.arcade .lane:last-child{border-bottom:none;}
+  .track-road{position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(90deg,transparent 0 30px,rgba(255,255,255,.06) 30px 44px);
+    animation:roadMove 1.1s linear infinite;}
+  @keyframes roadMove{to{background-position:-44px 0;}}
+  .race-track.arcade .lname{position:absolute;left:4px;top:2px;font-size:10px;font-weight:900;color:#8FA0D0;letter-spacing:.05em;text-transform:uppercase;z-index:2;}
+  .race-track.arcade .racer{top:10px;filter:drop-shadow(0 0 6px rgba(120,160,255,.45));z-index:2;}
+  .racer.boost::before{content:'';position:absolute;right:92%;top:12px;width:26px;height:14px;border-radius:50%;
+    background:radial-gradient(ellipse at right,#FFD34E 10%,#FF8A3D 55%,transparent 75%);
+    filter:blur(1px);animation:flick .18s infinite alternate;}
+  @keyframes flick{from{transform:scaleX(1)}to{transform:scaleX(1.5);opacity:.7}}
+  .pos-chip{position:absolute;right:4px;top:16px;font-size:11px;font-weight:900;color:#8FA0D0;
+    background:rgba(255,255,255,.08);border-radius:99px;padding:2px 9px;z-index:2;}
+  .pos-chip.first{color:#0B1026;background:#FFD34E;box-shadow:0 0 12px rgba(255,211,78,.5);}
+  .finish-neon{position:absolute;right:12px;top:6px;bottom:6px;width:9px;border-radius:5px;z-index:1;
+    background:repeating-linear-gradient(45deg,#fff 0 5px,#0B1026 5px 10px);box-shadow:0 0 14px rgba(255,255,255,.35);}
+  .qcard.arcade{background:#141B3C;border-color:#2A3566;box-shadow:0 8px 26px rgba(0,0,0,.5);margin-top:12px;}
+  .qcard.arcade .qtext{color:#fff;}
+  .qcard.arcade .wtag{color:#8FA0D0;}
+  .qcard.arcade .qvisual{color:#fff;}
+  .qcard.arcade .passage{background:#1B234A;color:#E7ECFF;}
+  .qcard.arcade .choice{background:#1B234A;border-color:#2A3566;color:#fff;}
+  .qcard.arcade .choice.picked{border-color:#2563EB;background:#22306B;}
+  .qcard.arcade .choice.correct{border-color:#22C55E;background:rgba(34,197,94,.16);}
+  .qcard.arcade .choice.wrong{border-color:#DC2626;background:rgba(220,38,38,.16);}
+  .qcard.arcade .choice.reveal{border-color:#22C55E;background:rgba(34,197,94,.16);}
+  .qcard.arcade .say{background:#22306B;color:#9DB8FF;}
+  .qcard.arcade .coach-bubble{background:#1B234A;border-color:#2A3566;color:#E7ECFF;}
+  .qcard.arcade .coach-bubble .ex{color:#8FA0D0;}
+  .count-overlay{position:fixed;inset:0;background:rgba(11,16,38,.88);z-index:96;display:none;align-items:center;justify-content:center;flex-direction:column;}
+  .count-overlay.open{display:flex;}
+  .count-num{font-size:130px;font-weight:900;color:#FFD34E;line-height:1;
+    text-shadow:0 0 40px rgba(255,211,78,.65);animation:countPop .8s ease both;}
+  .count-sub{color:#8FA0D0;font-weight:800;font-size:16px;margin-top:8px;letter-spacing:.2em;text-transform:uppercase;}
+  @keyframes countPop{0%{transform:scale(.3);opacity:0}45%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}
+  .turbo-flash{position:fixed;top:18%;left:50%;transform:translateX(-50%);z-index:97;pointer-events:none;
+    font-size:44px;font-weight:900;color:#FFD34E;text-shadow:0 0 26px rgba(255,211,78,.8),2px 2px 0 #DC2626;
+    letter-spacing:.06em;animation:countPop .7s ease both;}
+  .lap-flash{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;flex-direction:column;
+    background:rgba(11,16,38,.9);color:#fff;}
+  .lap-flash h2{font-size:38px;font-weight:900;margin:10px 0 4px;text-shadow:0 0 24px rgba(120,160,255,.6);}
+  .lap-flash p{color:#8FA0D0;font-weight:800;margin:0;}
+  .podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:14px 0 6px;}
+  .pod{width:72px;border-radius:12px 12px 4px 4px;display:flex;flex-direction:column;align-items:center;padding-top:6px;color:#3D2F00;font-weight:900;font-size:13px;}
+  .pod svg{width:42px;height:42px;margin-top:-30px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25));}
+  .pod.p1{background:linear-gradient(180deg,#FFD34E,#E5A812);height:86px;}
+  .pod.p2{background:linear-gradient(180deg,#D7DEE9,#9FA9BC);height:64px;}
+  .pod.p3{background:linear-gradient(180deg,#E8A365,#B96F2E);height:50px;}
+  .qual-row{display:flex;align-items:center;gap:10px;padding:8px 0;}
+  .qual-row .qname{flex:1;font-weight:800;font-size:14px;}
+  .qual-row .qcount{font-size:12.5px;font-weight:900;color:var(--ink2);min-width:52px;text-align:right;}
+  .qual-row.done .qname,.qual-row.done .qcount{color:var(--ok);}
+  .qual-meter{flex:2;height:10px;background:var(--line);border-radius:99px;overflow:hidden;}
+  .qual-meter>div{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--coral),var(--gold));transition:width .5s;}
+  .qual-row.done .qual-meter>div{background:var(--ok);}
+  .gp-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:none;border-radius:var(--r-btn);
+    padding:16px;margin-top:12px;font-size:17px;font-weight:900;cursor:pointer;color:#fff;letter-spacing:.03em;
+    background:linear-gradient(120deg,#DC2626,#2563EB);box-shadow:0 5px 18px rgba(37,99,235,.4);}
+  .gp-btn:not(:disabled){animation:gpPulse 1.6s ease-in-out infinite;}
+  @keyframes gpPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+  .gp-btn:disabled{background:var(--line);color:var(--ink2);box-shadow:none;cursor:default;animation:none;}
+  .gp-btn svg{width:20px;height:20px;}
 </style>
 </head>
 <body>
@@ -520,8 +594,13 @@
   </div>
   <!-- RACE -->
   <div class="screen" id="scr-race">
-    <div class="race-track" id="raceTrack"></div>
-    <div class="qcard">
+    <div class="lap-banner">
+      <button class="iconbtn" id="raceQuit" aria-label="Leave the race"><svg class="icon"><use href="#i-x"/></svg></button>
+      <span class="lap-title" id="lapLabel"></span>
+      <span class="cup-dot" id="lapCup"></span>
+    </div>
+    <div class="race-track arcade" id="raceTrack"></div>
+    <div class="qcard arcade" id="raceCard">
       <div class="wtag" id="raceTag"></div>
       <div class="qtext" id="rqtext"></div>
       <div class="qvisual" id="rqvisual"></div>
@@ -530,7 +609,7 @@
       <div class="coach-row" aria-live="polite"><span id="rcoachArt"></span><div class="coach-bubble" id="rcoachMsg" style="display:none"></div></div>
     </div>
   </div>
-
+  <div class="count-overlay" id="countOverlay"><div class="count-num" id="countNum">3</div><div class="count-sub" id="countSub">Get ready</div></div>
 </div>
 
 <!-- PACK OVERLAY -->
@@ -1751,15 +1830,23 @@ function renderHome(){
   });
   $('chestNote').innerHTML=S.daily.chest
     ?`<svg class="icon" style="width:18px;height:18px;color:var(--gold)"><use href="#i-chest"/></svg> Chest opened! Three new missions and a new chest arrive tomorrow${S.streakDays>1?'. Keep your '+S.streakDays+' day streak going':''}`
-    :'<svg class="icon" style="width:18px;height:18px;color:var(--ink2)"><use href="#i-chest"/></svg> Finish all three to open the daily chest and unlock the Victory Race';
-  const oldRb=$('raceBtn');if(oldRb)oldRb.remove();
-  if(S.daily.chest){
-    const rb=document.createElement('button');
-    rb.className='race-btn';rb.id='raceBtn';
-    rb.innerHTML=`<svg class="icon" style="stroke:#fff"><use href="#i-bolt"/></svg>${S.daily.raceWon?'Victory Race: bonus round':'Victory Race is open!'}`;
-    rb.onclick=()=>startRace();
-    $('chestNote').parentNode.appendChild(rb);
-  }
+    :'<svg class="icon" style="width:18px;height:18px;color:var(--ink2)"><use href="#i-chest"/></svg> Finish all three to open the daily chest';
+  const oldGp=$('gpCard');if(oldGp)oldGp.remove();
+  const qual=gpQual();
+  const gp=document.createElement('div');
+  gp.className='goal-card';gp.id='gpCard';
+  const qMeter=(v,max)=>`<div class="qual-meter"><div style="width:${Math.min(100,Math.round(v/max*100))}%"></div></div>`;
+  const qRow=(name,v,max,done)=>`<div class="qual-row ${done?'done':''}"><span class="qname">${name}</span>${qMeter(v,max)}<span class="qcount">${Math.min(v,max)}/${max}</span></div>`;
+  gp.innerHTML=`<h3><svg class="icon" style="color:var(--read)"><use href="#i-swords"/></svg>Grand Prix qualification</h3>
+    ${qRow("Today's three missions",qual.m,3,S.daily.chest)}
+    ${qRow('Questions answered today',qual.a,GP_REQ_A,qual.a>=GP_REQ_A)}
+    ${qRow('Right answers today',qual.r,GP_REQ_R,qual.r>=GP_REQ_R)}
+    <button class="gp-btn" id="gpGo" ${qual.ok?'':'disabled'}>
+      <svg class="icon" style="stroke:currentColor"><use href="#i-bolt"/></svg>
+      ${qual.ok?(S.daily.raceWon?'RACE AGAIN':'START THE GRAND PRIX'):'Train to qualify'}</button>`;
+  $('goalList').parentNode.parentNode.insertBefore(gp,$('goalList').parentNode.nextSibling);
+  $('goalList').parentNode.parentNode.appendChild(gp);
+  $('gpGo').onclick=()=>{if(gpQual().ok)startRace();else{sfx.tap();speak('Keep training. Finish the three meters to unlock the Grand Prix.');}};
 }
 
 /* ============ map ============ */
@@ -2002,7 +2089,7 @@ function endMission(){
   let chestJustDone=false;
   if(!S.daily.chest&&S.daily.done.length>=3){S.daily.chest=true;chestJustDone=true;
     queueCeremony(`<svg viewBox="0 0 24 24" width="170" height="170" style="stroke:var(--gold);fill:none;stroke-width:1.6"><use href="#i-chest"/></svg>`,
-      'Daily chest unlocked','All three missions done. A card pack is inside, and the Victory Race is now open on your home screen.',()=>sfx.chest());}
+      'Daily chest unlocked','A card pack is inside. Now hit your question goals to qualify for the Grand Prix.',()=>sfx.chest());}
   S.daily.missions++;
   // pack
   pendingPack=null;
@@ -2050,7 +2137,7 @@ function endMission(){
 }
 function maybePause(){
   const mins=(Date.now()-sessionStart)/60000;
-  if(mins>=15){
+  if(mins>=25){
     $('rechargeMascot').innerHTML=mascotSVG('sleepy',120);
     show('scr-recharge');
     speak('Hero recharge. You trained hard today. Rest makes heroes stronger.');
@@ -2166,48 +2253,101 @@ function renderParent(){
     <div class="weekplan"><p><strong>Week 1: math worlds.</strong> One or two 10 to 15 minute sessions a day. Let him use the read-aloud button freely. Watch the Progress list above: you want step 2 or 3 with most answers right.</p></div>
     <div class="weekplan"><p><strong>Week 2: reading worlds.</strong> Same rhythm. Revisit any math world that sits at step 1.</p></div>
     <div class="weekplan"><p><strong>Week 3: Super Mix daily.</strong> Practice the habit that matters most on test day: listen, think, then tap. The game never rewards speed on purpose, because testers flag rushed answers.</p></div>
-    <p><strong>Healthy limits are built in:</strong> a stretch break every third round, and a wind-down screen after about 15 minutes of play. For young children, two short sessions beat one long one, and sleep the night before a test beats everything.</p>
-    <p>Progress saves on this device, separately for each student. Use the switch button above to move between students or add a new one. Each student keeps their own stars, cards, levels, and day-by-day history. The Grown-ups tab opens with a press-and-hold so little fingers stay in the game.</p>`;
+    <p><strong>Healthy limits are built in:</strong> a stretch break every third round, and a wind-down screen after about 25 minutes of play. For young children, two short sessions beat one long one, and sleep the night before a test beats everything.</p>
+    <p><strong>The Grand Prix gate is deliberately demanding:</strong> the daily chest plus at least 50 questions answered and 30 correct that day. That guarantees a real practice volume before the reward race, and the race itself climbs from grade level up to third-grade questions across its three laps.</p><p>Progress saves on this device, separately for each student. Use the switch button above to move between students or add a new one. Each student keeps their own stars, cards, levels, and day-by-day history. The Grown-ups tab opens with a press-and-hold so little fingers stay in the game.</p>`;
 }
 
 
-/* ============ victory race ============ */
+/* ============ grand prix ============ */
 const RACERS=[
   ['turbo','Turbo',`<svg viewBox="0 0 40 40"><path d="M4 22 L14 18 L4 14 Z" fill="#7FB8FF"/><path d="M2 28 L12 25 L4 21 Z" fill="#B8D6FF"/><circle cx="24" cy="20" r="13" fill="#2F6BFF"/><circle cx="21" cy="17" r="3.4" fill="#fff"/><circle cx="29" cy="17" r="3.4" fill="#fff"/><circle cx="21.5" cy="17.5" r="1.6" fill="#1B2A4A"/><circle cx="29.5" cy="17.5" r="1.6" fill="#1B2A4A"/><path d="M21 26 Q25 29 29 26" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`],
   ['shadow','Shadow',`<svg viewBox="0 0 40 40"><path d="M4 20 L13 17 L5 13 Z" fill="#E8484D"/><circle cx="24" cy="20" r="13" fill="#1B2A4A"/><path d="M14 12 L20 6 L22 14 Z" fill="#1B2A4A"/><path d="M34 12 L28 6 L26 14 Z" fill="#1B2A4A"/><path d="M17 17 l6 2 M31 17 l-6 2" stroke="#E8484D" stroke-width="2.4" stroke-linecap="round"/><circle cx="21" cy="20" r="2.6" fill="#fff"/><circle cx="28" cy="20" r="2.6" fill="#fff"/><path d="M21 27 Q24.5 29 28 27" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`],
   ['onyx','Onyx',`<svg viewBox="0 0 40 40"><circle cx="22" cy="21" r="13" fill="#20242E"/><path d="M12 12 L16 4 L20 12 Z" fill="#20242E"/><path d="M32 12 L28 4 L24 12 Z" fill="#20242E"/><path d="M13 13 L16 7 L19 13 Z" fill="#3A4152"/><path d="M31 13 L28 7 L25 13 Z" fill="#3A4152"/><ellipse cx="18" cy="19" rx="3" ry="3.6" fill="#F5B02E"/><ellipse cx="27" cy="19" rx="3" ry="3.6" fill="#F5B02E"/><circle cx="18" cy="19.6" r="1.4" fill="#20242E"/><circle cx="27" cy="19.6" r="1.4" fill="#20242E"/><path d="M19 27 Q22.5 29.5 26 27" stroke="#8A93A8" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`]
 ];
+const GP_REQ_A=50,GP_REQ_R=30,GP_SEG=5,GP_MAXQ=8;
+const GP_LAPS=[
+  {name:'Bronze Sprint',color:'#E8A365',lvl:l=>l,riv:[.42,.38,.34]},
+  {name:'Silver Circuit',color:'#D7DEE9',lvl:l=>Math.min(3,l+1),riv:[.52,.47,.42]},
+  {name:'Gold Final',color:'#FFD34E',lvl:()=>3,riv:[.6,.54,.48]}
+];
+function gpQual(){
+  const h=S.history[todayStr()]||{a:0,r:0};
+  return {m:Math.min(3,S.daily.done.length),a:h.a,r:h.r,
+    ok:S.daily.chest&&h.a>=GP_REQ_A&&h.r>=GP_REQ_R};
+}
+sfx.beep=f=>tone(f||440,0,.16,'square',.14);
+sfx.whoosh=()=>{tone(700,0,.12,'sawtooth',.07);tone(380,.06,.16,'sawtooth',.07);};
+sfx.lapUp=()=>{[440,554,659,880].forEach((f,i)=>tone(f,i*.09,.16,'triangle',.16));};
 let R=null;
-const RACE_SEG=5,RACE_MAXQ=8;
 function startRace(){
-  hushed();
-  R={pos:[0,0,0,0],idx:0,answered:false,won:false};
+  if(!gpQual().ok)return;
+  hushed();leaveQuiz();
+  R={lap:0,pos:[0,0,0,0],q:0,coins:0,streak:0,over:false};
+  document.body.classList.add('race-mode');
   show('scr-race');
+  renderLap();
+  speak('Grand Prix. Three laps. Every right answer makes you dash. Beat all three racers to the trophy.');
+  countdown(()=>raceQuestion());
+}
+function exitRace(){
+  R=null;hushed();
+  document.body.classList.remove('race-mode');
+  $('countOverlay').classList.remove('open');
+  renderHome();show('scr-home');
+}
+function countdown(cb){
+  const ov=$('countOverlay'),num=$('countNum');
+  const seq=['3','2','1','GO!'];let i=0;
+  ov.classList.add('open');
+  $('countSub').textContent=GP_LAPS[R.lap].name;
+  const step=()=>{
+    if(!R){ov.classList.remove('open');return;}
+    if(i>=seq.length){ov.classList.remove('open');cb();return;}
+    num.textContent=seq[i];
+    num.style.animation='none';void num.offsetWidth;num.style.animation='';
+    sfx.beep(i===3?880:440);
+    i++;setTimeout(step,i===seq.length?600:800);
+  };
+  step();
+}
+function renderLap(){
+  const lap=GP_LAPS[R.lap];
+  $('lapLabel').textContent=`LAP ${R.lap+1} of 3 · ${lap.name}`;
+  $('lapCup').style.color=lap.color;$('lapCup').style.background=lap.color;
   renderTrack();
-  speak(S.daily.raceWon?'Bonus race. Answer questions to dash to the finish.':'Victory race. Every right answer makes your hero dash forward. Beat Turbo, Shadow, and Onyx to the finish.');
-  raceQuestion();
 }
 function renderTrack(){
   const t=$('raceTrack');
-  const lanes=[['you',S.player||'You',avatarSVG(S.avatar,36)],...RACERS.map(r=>[r[0],r[1],r[2]])];
-  t.innerHTML='<div class="finish"></div>'+lanes.map((l,i)=>
-    `<div class="lane"><span class="lname">${esc(l[1])}</span><span class="racer" id="racer${i}" style="left:${R.pos[i]/RACE_SEG*82}%">${l[2]}</span></div>`).join('');
+  const lanes=[[S.player||'You',avatarSVG(S.avatar,34)],...RACERS.map(r=>[r[1],r[2]])];
+  t.innerHTML='<div class="track-road"></div><div class="finish-neon"></div>'+
+    lanes.map((l,i)=>`<div class="lane"><span class="lname">${esc(l[0])}</span><span class="racer" id="racer${i}" style="left:${R.pos[i]/GP_SEG*78}%">${l[1]}</span><span class="pos-chip" id="pos${i}"></span></div>`).join('');
+  updatePositions();
 }
-function moveRacer(i){
+function updatePositions(){
+  const order=[0,1,2,3].slice().sort((a,b)=>R.pos[b]-R.pos[a]);
+  const rank=[];order.forEach((who,idx)=>{rank[who]=idx+1;});
+  const words=['1st','2nd','3rd','4th'];
+  [0,1,2,3].forEach(i=>{
+    const chip=$('pos'+i);
+    if(chip){chip.textContent=words[rank[i]-1];chip.classList.toggle('first',rank[i]===1);}
+  });
+  return rank;
+}
+function moveRacer(i,boost){
   const el=$('racer'+i);
   if(!el)return;
-  el.style.left=(Math.min(R.pos[i],RACE_SEG)/RACE_SEG*82)+'%';
-  el.classList.add('zip');
-  setTimeout(()=>el.classList.remove('zip'),700);
+  el.style.left=(Math.min(R.pos[i],GP_SEG)/GP_SEG*78)+'%';
+  if(i===0&&boost){el.classList.add('boost');setTimeout(()=>el.classList.remove('boost'),900);}
 }
 function raceQuestion(){
   if(!R)return;
-  if(R.pos[0]>=RACE_SEG||R.idx>=RACE_MAXQ){endRace();return;}
+  if(R.pos[0]>=GP_SEG){lapComplete();return;}
+  if(Math.max(R.pos[1],R.pos[2],R.pos[3])>=GP_SEG||R.q>=GP_MAXQ){raceOver(false);return;}
   const w=pick(WORLDS);
-  const L=S.levels[w.id];
+  const L=GP_LAPS[R.lap].lvl(S.levels[w.id]);
   let Q;try{Q=w.gen(L);}catch(e){Q=genOps(1);}
-  R.q=Q;R.answered=false;
-  $('raceTag').textContent=`${w.name} · question ${R.idx+1} of ${RACE_MAXQ}`;
+  R.cur={Q,L,w};R.answered=false;
+  $('raceTag').textContent=`${w.name} · question ${R.q+1} of ${GP_MAXQ}`;
   $('rqtext').innerHTML=Q.text;
   $('rqvisual').innerHTML=Q.visual||'';
   $('rcoachArt').innerHTML=mascotSVG('think',40);
@@ -2224,71 +2364,120 @@ function raceQuestion(){
   });
   speak(Q.spoken);
 }
+function turboFlash(txt){
+  if(reduceMotion)return;
+  const d=document.createElement('div');
+  d.className='turbo-flash';d.textContent=txt;
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(),720);
+}
 function raceAnswer(i){
   if(!R||R.answered)return;
   R.answered=true;
-  const c=R.q.choices[i];
+  const {Q,L}=R.cur;
+  const c=Q.choices[i];
   const buttons=[...$('rchoices').children];
   buttons.forEach(b=>b.disabled=true);
-  logHistory(c.correct,2);
+  logHistory(c.correct,L);
+  const before=updatePositions();
   if(c.correct){
     buttons[i].classList.add('correct');
-    R.pos[0]++;moveRacer(0);
-    S.coins++;S.xp+=10;
-    sfx.correct();
+    R.streak++;
+    const turbo=R.streak>=2;
+    R.pos[0]++;moveRacer(0,true);
+    S.coins++;R.coins++;S.xp+=12;
+    sfx.correct();sfx.whoosh();
+    if(turbo){turboFlash('TURBO!');}
+    else powBurst&&0;
     $('rcoachArt').innerHTML=mascotSVG('cheer',40);
-    $('rcoachMsg').style.display='block';$('rcoachMsg').textContent='Zoom! You dash ahead.';
+    $('rcoachMsg').style.display='block';
+    $('rcoachMsg').textContent=turbo?'TURBO! The rivals are frozen this turn.':'Zoom! You dash ahead.';
+    if(!turbo){
+      GP_LAPS[R.lap].riv.forEach((p,ri)=>{if(R.pos[ri+1]<GP_SEG&&Math.random()<p){R.pos[ri+1]++;moveRacer(ri+1);}});
+    }
   }else{
     buttons[i].classList.add('wrong');
-    const ci=R.q.choices.findIndex(x=>x.correct);
+    R.streak=0;
+    const ci=Q.choices.findIndex(x=>x.correct);
     if(ci>=0)buttons[ci].classList.add('reveal');
     sfx.wrong();
     $('rcoachArt').innerHTML=mascotSVG('idle',40);
     $('rcoachMsg').style.display='block';
-    $('rcoachMsg').innerHTML='Not this one.'+(R.q.explain?` <span class="ex"></span>`:'');
-    if(R.q.explain)$('rcoachMsg').querySelector('.ex').textContent=R.q.explain;
+    $('rcoachMsg').innerHTML='The pack surges!'+(Q.explain?` <span class="ex"></span>`:'');
+    if(Q.explain)$('rcoachMsg').querySelector('.ex').textContent=Q.explain;
+    GP_LAPS[R.lap].riv.forEach((p,ri)=>{if(R.pos[ri+1]<GP_SEG&&Math.random()<p+.18){R.pos[ri+1]++;moveRacer(ri+1);}});
   }
-  // rivals take their turn, never faster than a perfect player
-  [1,2,3].forEach(ri=>{
-    if(R.pos[ri]<RACE_SEG-1&&Math.random()<[.55,.48,.42][ri-1]){R.pos[ri]++;moveRacer(ri);}
-  });
+  const after=updatePositions();
+  if(after[0]<before[0]){
+    sfx.lapUp();
+    speak(after[0]===1?'You took the lead!':'You passed a racer!');
+  }
   refreshTopbar();save();
-  R.idx++;
-  setTimeout(raceQuestion,c.correct?1300:3000);
+  R.q++;
+  setTimeout(raceQuestion,c.correct?1300:3100);
 }
-function endRace(){
-  const winPos=R.pos[0],rivalsBest=Math.max(R.pos[1],R.pos[2],R.pos[3]);
-  const won=winPos>=RACE_SEG||winPos>rivalsBest;
-  const first=!S.daily.raceWon;
+function lapComplete(){
+  const done=R.lap;
+  R.lap++;
+  if(done===0){S.coins+=5;R.coins+=5;}
+  if(done===1){S.coins+=10;R.coins+=10;}
+  save();refreshTopbar();
+  if(R.lap>=3){raceOver(true);return;}
+  sfx.lapUp();confetti(14);
+  const lf=document.createElement('div');
+  lf.className='lap-flash';
+  lf.innerHTML=`<span style="font-size:60px">🏁</span><h2>LAP ${done+1} DONE</h2><p>Next: ${GP_LAPS[R.lap].name}. The questions get harder. The racers get faster.</p>`;
+  document.body.appendChild(lf);
+  speak(`Lap ${done+1} complete! Next lap: ${GP_LAPS[R.lap].name}. The questions get harder and the racers get faster.`);
+  setTimeout(()=>{
+    lf.remove();
+    if(!R)return;
+    R.pos=[0,0,0,0];R.q=0;R.streak=0;
+    renderLap();
+    countdown(()=>raceQuestion());
+  },2600);
+}
+function raceOver(champion){
+  const posSnap=R.pos.slice(),coins=R.coins,lapReached=R.lap+1;
+  const standings=[0,1,2,3].slice().sort((a,b)=>posSnap[b]-posSnap[a]);
+  const artFor=i=>i===0?avatarSVG(S.avatar,42):RACERS[i-1][2].replace('viewBox','width="42" height="42" viewBox');
+  const nameFor=i=>i===0?(S.player||'You'):RACERS[i-1][1];
+  const podium=`<div class="podium">
+    <div class="pod p2">${artFor(standings[1])}<span>${esc(nameFor(standings[1]))}</span></div>
+    <div class="pod p1">${artFor(champion?0:standings[0])}<span>${esc(nameFor(champion?0:standings[0]))}</span></div>
+    <div class="pod p3">${artFor(standings[2])}<span>${esc(nameFor(standings[2]))}</span></div>
+  </div>`;
   R=null;
-  if(won){
-    if(first){S.daily.raceWon=true;S.coins+=10;pendingPack={min:'rare'};}
-    else{S.coins+=2;pendingPack=null;}
+  document.body.classList.remove('race-mode');
+  const first=!S.daily.raceWon;
+  if(champion){
+    S.coins+=20;S.gpWins=(S.gpWins||0)+1;
+    if(first){S.daily.raceWon=true;pendingPack={min:'epic'};}
+    else pendingPack=null;
     save();refreshTopbar();
-    confetti(30);sfx.fanfare();
-    $('resMascot').innerHTML=mascotSVG('cheer',110);
+    confetti(40);sfx.fanfare();
+    $('resMascot').innerHTML=podium;
     $('resStars').innerHTML='';
-    $('resTitle').textContent='You won the race!';
-    $('resSub').textContent=first?'Champion of the track.':'Still the champion.';
-    $('resChips').innerHTML=first
-      ?'<span class="chip">+10 coins</span><span class="chip">Bonus card pack</span>'
-      :'<span class="chip">+2 coins</span>';
-    $('packBtn').style.display=first?'flex':'none';
-    speak(first?`You won the victory race, ${S.player}. Ten coins and a bonus card pack.`:'You won again. Two more coins.');
+    $('resTitle').textContent='GRAND PRIX CHAMPION';
+    $('resSub').textContent=`All three laps conquered. Grand Prix wins: ${S.gpWins}.`;
+    $('resChips').innerHTML=`<span class="chip">+${coins+20} coins</span>`+(first?'<span class="chip">Epic card pack</span>':'');
+    $('packBtn').style.display=first&&pendingPack?'flex':'none';
+    speak(`Grand Prix champion, ${S.player}! You conquered all three laps. Incredible.`);
   }else{
     save();refreshTopbar();
-    $('resMascot').innerHTML=mascotSVG('idle',110);
+    $('resMascot').innerHTML=podium;
     $('resStars').innerHTML='';
-    $('resTitle').textContent='So close!';
-    $('resSub').textContent='The racers got away this time. You can race again right now.';
-    $('resChips').innerHTML='';
+    $('resTitle').textContent=`The ${GP_LAPS[Math.min(lapReached-1,2)].name} got you`;
+    $('resSub').textContent=`You reached lap ${lapReached} of 3 and earned ${coins} coins. Jump back in!`;
+    $('resChips').innerHTML=coins?`<span class="chip">+${coins} coins</span>`:'';
     $('packBtn').style.display='none';
-    speak('So close. You can race again right now.');
+    speak(`So close! You reached lap ${lapReached}. Race again and take the trophy.`);
   }
   show('scr-result');
   $('againBtn').onclick=()=>startRace();
   $('mapBtn').onclick=()=>{renderHome();show('scr-home');};
 }
+$('raceQuit').onclick=()=>exitRace();
 /* ============ wire-up ============ */
 $('startBtn').onclick=()=>{sfx.tap();renderMap();show('scr-map');};
 $('tabMath').onclick=()=>{S.tab='math';renderMap();sfx.tap();};
