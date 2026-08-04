@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="Dr Sam's Academy: a math and reading practice game for young learners.">
 <title>Dr Sam's Academy</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#2F6BFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Dr Sam's Academy">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4l24 8v18c0 15-10.5 24-24 30C18.5 54 8 45 8 30V12z' fill='%232F6BFF'/%3E%3Cpath d='M36 14L22 34h8l-4 16 16-22h-8z' fill='%23F5B02E'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -371,6 +377,7 @@
   .cere p{color:var(--ink2);font-weight:700;font-size:17px;margin:0 0 20px;}
   .cere .btn{max-width:280px;}
 
+  body{padding-top:env(safe-area-inset-top);}
   /* ---------- nav ---------- */
   .navbar{
     position:fixed;bottom:0;left:0;right:0;z-index:50;
@@ -816,6 +823,7 @@ function save(){
   }catch(e){}
   if(S.player){ROOT.profiles[S.player]=S;ROOT.current=S.player;}
   try{localStorage.setItem(ROOT_KEY,JSON.stringify(ROOT));}catch(e){}
+  persistNative();
 }
 function load(){
   try{
@@ -876,10 +884,24 @@ let voice=null,speakSeq=0,resumeTimer=null;
 function pickVoice(){
   if(!('speechSynthesis' in window))return;
   const vs=speechSynthesis.getVoices().filter(v=>v.lang&&v.lang.startsWith('en'));
-  const tiers=[/Natural|Neural/i,/Online/i,/Google US English/i,/Samantha|Aria|Jenny/i,/Karen|Zira|female/i];
-  for(const t of tiers){const hit=vs.find(v=>t.test(v.name));if(hit){voice=hit;return;}}
+  /* the grown-up's chosen voice wins outright */
+  if(typeof S!=='undefined'&&S&&S.voiceName){
+    const chosen=vs.find(v=>v.name===S.voiceName);
+    if(chosen){voice=chosen;return;}
+  }
+  /* local natural voices first; network voices only when nothing local is
+     good, because network speech is where the lag and dropouts live */
+  const tiers=[
+    v=>/Natural|Neural|Premium|Enhanced/i.test(v.name)&&!/Online/i.test(v.name),
+    v=>/Samantha|Aria|Jenny|Allison|Ava|Karen|Moira|Tessa/i.test(v.name)&&v.localService!==false,
+    v=>/Google US English/i.test(v.name),
+    v=>/Natural|Neural/i.test(v.name),
+    v=>/Zira|female/i.test(v.name)
+  ];
+  for(const t of tiers){const hit=vs.find(t);if(hit){voice=hit;return;}}
   voice=vs[0]||null;
 }
+function speechRate(){return (typeof S!=='undefined'&&S&&S.rate)?S.rate:0.92;}
 if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
 function cleanSpoken(t){
   let x=String(t)
@@ -892,6 +914,9 @@ function cleanSpoken(t){
     .replace(/>/g,' is greater than ')
     .replace(/</g,' is less than ')
     .replace(/·/g,' ')
+    .replace(/×/g,' times ')
+    .replace(/÷/g,' divided by ')
+    .replace(/\b(\d+)\s*R(\d+)\b/g,'$1 remainder $2')
     .replace(/\bDr\b\.?/g,'Doctor')
     .replace(/&/g,' and ')
     .replace(/[“”]/g,'"').replace(/[‘’]/g,"'")
@@ -899,12 +924,49 @@ function cleanSpoken(t){
   try{x=x.replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{2BFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}\u{20E3}]/gu,' ');}catch(e){}
   return x.replace(/\s+/g,' ').trim();
 }
+/* ===== native bridge (Capacitor). Absent on the plain web; every use is
+   guarded, so this file stays one build for web, iOS and Android. ===== */
+const CAP=(window.Capacitor&&window.Capacitor.Plugins)||null;
+const NativeTTS=(CAP&&CAP.TextToSpeech)?CAP.TextToSpeech:null;
+const NativePrefs=(CAP&&CAP.Preferences)?CAP.Preferences:null;
+let nativeSpeaking=0;
+function bridgeSpeaking(){return nativeSpeaking>0;}
+async function nativeSay(parts,my){
+  try{await NativeTTS.stop();}catch(e){}
+  for(const p of parts){
+    if(my!==speakSeq)return;
+    nativeSpeaking++;
+    try{await NativeTTS.speak({text:p,lang:'en-US',rate:0.88,pitch:1.0,volume:1.0,category:'playback'});}
+    catch(e){}
+    finally{nativeSpeaking=Math.max(0,nativeSpeaking-1);}
+  }
+  if(my===speakSeq&&typeof musicDuck==='function')try{musicDuck(false);}catch(e){}
+}
+function persistNative(){
+  if(!NativePrefs)return;
+  try{NativePrefs.set({key:ROOT_KEY,value:JSON.stringify(ROOT)}).catch(()=>{});}catch(e){}
+}
 function speak(text){
-  if(S.muted||!('speechSynthesis' in window)||!text)return;
+  if(S.muted||!text)return;
+  if(!NativeTTS&&!('speechSynthesis' in window))return;
   if(typeof musicDuck==='function')try{musicDuck(true);}catch(e){}
   const my=++speakSeq;
-  const parts=cleanSpoken(text).split(/(?<=[.!?])\s+/).filter(Boolean);
+  /* sentences first, then any sentence past 180 characters splits again at
+     its commas: every piece stays far below the length where engines choke,
+     which is what lets the pause-and-resume kick disappear entirely */
+  const base=cleanSpoken(text).split(/(?<=[.!?])\s+/).filter(Boolean);
+  const parts=[];
+  base.forEach(p=>{
+    if(p.length<=180){parts.push(p);return;}
+    let buf='';
+    p.split(/(?<=,)\s+/).forEach(seg=>{
+      if((buf+' '+seg).trim().length>180){if(buf)parts.push(buf.trim());buf=seg;}
+      else buf=(buf?buf+' ':'')+seg;
+    });
+    if(buf.trim())parts.push(buf.trim());
+  });
   if(!parts.length)return;
+  if(NativeTTS){nativeSay(parts,my);return;}
   const hadSpeech=speechSynthesis.speaking||speechSynthesis.pending;
   if(hadSpeech)speechSynthesis.cancel();
   clearInterval(resumeTimer);
@@ -912,16 +974,26 @@ function speak(text){
     if(my!==speakSeq)return;
     parts.forEach(p=>{
       const u=new SpeechSynthesisUtterance(p);
-      u.rate=.88;u.pitch=1;if(voice)u.voice=voice;
+      u.rate=speechRate();u.pitch=1;if(voice)u.voice=voice;
       speechSynthesis.speak(u);
     });
+    /* watchdog: only job is to un-duck the music when reading finishes */
     resumeTimer=setInterval(()=>{
-      if(!speechSynthesis.speaking){clearInterval(resumeTimer);try{musicDuck(false);}catch(e){}}
-      else{speechSynthesis.pause();speechSynthesis.resume();}
-    },1000);
+      if(!speechSynthesis.speaking&&!speechSynthesis.pending){
+        clearInterval(resumeTimer);try{musicDuck(false);}catch(e){}
+      }
+    },400);
   };
-  if(hadSpeech)setTimeout(go,140);else go();
+  if(hadSpeech)setTimeout(go,90);else go();
 }
+/* a silent breath every 15 seconds keeps the engine warm, so the first word
+   of a question starts without the cold-start wait */
+setInterval(()=>{
+  if(!ttsPrimed||NativeTTS||!('speechSynthesis' in window))return;
+  if(document.visibilityState!=='visible')return;
+  if(speechSynthesis.speaking||speechSynthesis.pending)return;
+  try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}
+},15000);
 /* pre-warm the speech engine on the first tap so the first story reads instantly */
 let ttsPrimed=false;
 document.addEventListener('pointerdown',()=>{
@@ -929,7 +1001,7 @@ document.addEventListener('pointerdown',()=>{
   ttsPrimed=true;
   try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);pickVoice();}catch(e){}
 },{once:false,capture:true});
-function hushed(){speakSeq++;if('speechSynthesis' in window)speechSynthesis.cancel();clearInterval(resumeTimer);if(typeof musicDuck==='function')try{musicDuck(false);}catch(e){}}
+function hushed(){speakSeq++;nativeSpeaking=0;if(NativeTTS)try{NativeTTS.stop().catch(()=>{});}catch(e){}if('speechSynthesis' in window)speechSynthesis.cancel();clearInterval(resumeTimer);if(typeof musicDuck==='function')try{musicDuck(false);}catch(e){}}
 
 /* Worlds where playing an answer option would destroy the thing being measured.
    Sound Cave asks a child to hear a rhyme or a first sound, Phonics Forest asks
@@ -1281,15 +1353,18 @@ function genPattern(L){
   if(L===1){
     const [x,y]=pick(pairs);
     if(rint(0,1)){return q('What comes next?',`${x} ${y} ${x} ${y} ${x} <b>?</b>`,
-      choicesFrom(y,[x,patAlt(x,y)],{n:3}),`The pattern repeats: ${nameOf(x)}, ${nameOf(y)}, again and again.`,'Look at the pattern. What comes next?');}
+      choicesFrom(y,[x,patAlt(x,y)],{n:3}),`The pattern repeats: ${nameOf(x)}, ${nameOf(y)}, again and again.`,
+      `Look at the pattern. ${nameOf(x)}, ${nameOf(y)}, ${nameOf(x)}, ${nameOf(y)}, ${nameOf(x)}, then what comes next?`);}
     return q('What comes next?',`${x} ${x} ${y} ${x} ${x} <b>?</b>`,
-      choicesFrom(y,[x,patAlt(x,y)],{n:3}),`Two ${nameOf(x)}s, then one ${nameOf(y)}.`,'Look at the pattern. What comes next?');
+      choicesFrom(y,[x,patAlt(x,y)],{n:3}),`Two ${nameOf(x)}s, then one ${nameOf(y)}.`,
+      `Look at the pattern. ${nameOf(x)}, ${nameOf(x)}, ${nameOf(y)}, ${nameOf(x)}, ${nameOf(x)}, then what comes next?`);
   }
   if(L===2){
     const t=rint(1,3);
     if(t===1){const [x,y]=pick(pairs);const z=patAlt(x,y);
       return q('What comes next?',`${x} ${y} ${z} ${x} ${y} <b>?</b>`,
-        choicesFrom(z,[x,y],{n:3}),'Three things repeat in order: one, two, three.','Look at the pattern. What comes next?');}
+        choicesFrom(z,[x,y],{n:3}),'Three things repeat in order: one, two, three.',
+        `Look at the pattern. ${nameOf(x)}, ${nameOf(y)}, ${nameOf(z)}, ${nameOf(x)}, ${nameOf(y)}, then what comes next?`);}
     if(t===2){const s=rint(1,6);
       if(rint(0,1))return q(`${s}, ${s+2}, ${s+4}, what comes next?`,'',
         numChoices(s+6,[s+5,s+7,s+8],1,20),'Each number jumps up by 2.',`${s}, ${s+2}, ${s+4}. What number comes next?`);
@@ -1789,7 +1864,7 @@ const STORIES={
     {p:'Nia draws a sun. She uses her yellow crayon.',q:'What does Nia use?',a:'A yellow crayon',w:['A purple crayon','A green marker','A brown pencil'],ex:'She uses her yellow crayon.'},
     {p:'The pup digs a hole. He hides his bone in it.',q:'What does the pup hide?',a:'His bone',w:['His ball','His sock','His dish'],ex:'He hides his bone in the hole.'},
     {p:'Ana claps for her team. They win the big game.',q:'Who wins the game?',a:'Her team',w:['Her coach','Her class','Her dad'],ex:'The story says they win.'},
-    {p:'It is hot today. We eat cold ice pops on the steps.',q:'What do they eat?',a:'Cold ice pops',w:['Hot corn bread','Warm apple pie','Cold fish sticks'],ex:'They eat cold ice pops because it is hot.'},
+    {p:'It is hot today. We eat cold ice pops on the steps.',q:'What do the kids eat?',a:'Cold ice pops',w:['Hot corn bread','Warm apple pie','Cold fish sticks'],ex:'The kids eat cold ice pops because it is hot.'},
     {p:'Max has a red kite. The wind takes it up, up, up.',q:'What takes the kite up?',a:'The wind',w:['The rain','The bird','The rope'],ex:'The wind takes the kite up.'},
     {p:'The hen sits on her eggs. Soon, three chicks pop out.',q:'How many chicks pop out?',a:'Three',w:['Seven','Eight','Four'],ex:'The story says three chicks.'}
   ],
@@ -1891,7 +1966,7 @@ function genPhonics(L){
       Q.nosay=true;return Q;}
     if(t===2){const [dg,word,wrongs]=pick(DIGRAPHS);
       return q(`Which word starts with the “${dg}” sound?`,'',
-        choicesFrom(word,wrongs),`${cap(word)} starts with ${dg}.`,`Which word starts with the ${dg.split('').join(', ')} sound?`);}
+        choicesFrom(word,wrongs),`${cap(word)} starts with ${dg}.`,`Which word starts with the ${SAY_SOUND[dg]||dg} sound?`);}
     const [bl,word,wrongs]=pick(BLENDS);
     return q(`Which word starts with the “${bl}” blend?`,'',
       choicesFrom(word,wrongs),`${cap(word)} starts with the ${bl} blend.`,`Which word starts with the ${bl.split('').join(', ')} blend?`);
@@ -3627,7 +3702,7 @@ function genLetters(L){
     return q(`Say the alphabet. What letter comes after <b>${a}, ${b}</b>?`,'',
       choicesFrom(ans,wr),
       'Sing the alphabet song in your head from the beginning and stop right after the letters you were given.',
-      `Say the alphabet. What letter comes after ${sayL(a)}, ${sayL(b)}?`);
+      `Say the alphabet. What letter comes after ${String(a).toUpperCase()}, ${String(b).toUpperCase()}?`);
   }
 
   /* 6. vowel or consonant sorting.
@@ -5750,9 +5825,10 @@ function genMachineTable(L){
       tbl.map(v=>'<tr><td style="border:2px solid #D9E4F7;padding:5px 16px;text-align:center">'+v+
         '</td><td style="border:2px solid #D9E4F7;padding:5px 16px;text-align:center">'+outOf(v)+
         '</td></tr>').join('')+'</table>';
-    const spoken='A machine changes every number the same way. '+
+    const mi=pick(MACH_FRAMES);
+    const spoken=mi+' '+
       tbl.map(v=>v+' goes in and '+outOf(v)+' comes out.').join(' ')+' What is the rule?';
-    return q('A machine changes every number the same way. What is the rule?', three,
+    return q(mi+' What is the rule?', three,
       mpChoices(ruleTxt, w),
       'Take one row at a time and ask what had to happen to the In number to make the Out number. '+
       (up?'The Out number is bigger every time, so the machine adds. ':'The Out number is smaller every time, so the machine takes away. ')+
@@ -5764,10 +5840,11 @@ function genMachineTable(L){
      the last Out. The input itself is offered as a wrong answer because
      forgetting to run the machine at all is the mistake children actually make. */
   const v3=ins[3], ans=outOf(v3);
-  const spoken='A machine changes every number the same way. '+
+  const mi2=pick(MACH_FRAMES);
+  const spoken=mi2+' '+
     ins.slice(0,3).map(v=>v+' goes in and '+outOf(v)+' comes out.').join(' ')+
     ' If '+v3+' goes in, what comes out?';
-  return q(`A machine changes every number the same way. If ${v3} goes in, what comes out?`, rows(true),
+  return q(mi2+` If ${v3} goes in, what comes out?`, rows(true),
     numChoices(ans, [v3, ans+1, ans-1, up?v3-d:v3+d].filter(x=>x>=0&&x!==ans), 0, 99),
     'Use the rows that are already filled in to work out what the machine does, '+
     (up?'then do that same adding to the last In number. ':'then do that same taking away to the last In number. ')+
@@ -6270,7 +6347,8 @@ function genMultiOp(B){
   const b=rint(3,9),quo=B>=5?rint(21,98):rint(12,29),r=rint(1,b-1);
   const a=b*quo+r;
   return q(a+' ÷ '+b+' = ?  Pick the answer with the remainder.','',
-    choicesFrom(quo+' R'+r,[(quo+1)+' R'+r,quo+' R'+(r===1?b-1:r-1),(quo-1)+' R'+r]),
+    choicesFrom(quo+' R'+r,[(quo+1)+' R'+r,quo+' R'+(r===1?b-1:r-1),(quo-1)+' R'+r])
+      .map(c=>({label:c.label,correct:c.correct,say:String(c.label).replace(/(\d+) R(\d+)/,'$1 remainder $2')})),
     'Find the biggest multiple of '+b+' that fits inside '+a+'. That is '+b+' × '+quo+' = '+(b*quo)+'. What is left over, '+r+', is the remainder, and a remainder is always smaller than the divisor.',
     a+' divided by '+b+' equals what? Pick the answer with the remainder.');
 }
@@ -6424,10 +6502,11 @@ function genPatUp(B){
       ins.map((v,i)=>'<tr><td style="border:2px solid #D9E4F7;padding:5px 16px;text-align:center">'+v+
         '</td><td style="border:2px solid #D9E4F7;padding:5px 16px;text-align:center">'+
         (i===3?'<b>?</b>':outOf(v))+'</td></tr>').join('')+'</table>';
-    return q('A machine changes every number the same way. If '+v3+' goes in, what comes out?',tbl,
+    const mi3=pick(MACH_FRAMES);
+    return q(mi3+' If '+v3+' goes in, what comes out?',tbl,
       numChoices(ans,[mul?v3+d:v3-d,ans+1,ans-1],1,100),
       'Test the finished rows: each Out is the In '+(mul?'times ':'divided by ')+d+'. Adding '+d+' fits none of the rows, and that is the trap. Apply the same rule to '+v3+'.',
-      'A machine changes every number the same way. '+rows+' If '+v3+' goes in, what comes out?');
+      mi3+' '+rows+' If '+v3+' goes in, what comes out?');
   }
   if(t===2){
     if(B>=5){
@@ -6626,6 +6705,7 @@ function coordSVG(px,py){
   b+='<circle cx="'+(ox+px*cell)+'" cy="'+(oy+(n-py)*cell)+'" r="6" fill="'+MG_RED+'"/>';
   return MG_svg(ox+n*cell+14,oy+n*cell+24,b,300);
 }
+const MACH_FRAMES=['A machine changes every number the same way.','This machine follows one secret rule.','Every number that goes into this machine comes out changed by the same rule.'];
 const QUAD_PROPS={
   square:'four equal sides and four square corners',
   rectangle:'two long sides, two short sides and four square corners',
@@ -10066,17 +10146,17 @@ function genShades(L){
 
   if(t===1){
     const wrongs=vpPad(top,w.slice(0,2),it.f,3);
-    return q(`All of these words mean ${it.t}. Which word is the STRONGEST?`,'',
+    return q(`All of these words are about ${it.t}. Which word is the STRONGEST?`,'',
       choicesFrom(top,wrongs),
       `Line the words up like steps, from a little to a lot. ${cap(w[0])} is only a little. The word on the top step is the one you want.`,
-      `All of these words mean ${it.t}. Look at the four words and tap the strongest one.`);
+      `All of these words are about ${it.t}. Look at the four words and tap the strongest one.`);
   }
   if(t===2){
     const wrongs=[w[n-1],w[n-2],w[n-3]];
     return q(`All of these words mean ${it.t}. Which word is the WEAKEST?`,'',
       choicesFrom(w[0],wrongs),
       `Line the words up like steps, from a little to a lot. The weakest word sits on the bottom step, so look for the smallest amount.`,
-      `All of these words mean ${it.t}. Look at the four words and tap the weakest one.`);
+      `All of these words are about ${it.t}. Look at the four words and tap the weakest one.`);
   }
   if(t===3){
     const tri=[w[0],w[n-2],w[n-1]];
@@ -10633,7 +10713,7 @@ const VP_CTX=[
    k:'to shake a little',d:['to shine brightly','to smell sweetly','to fall apart'],c:'the heavy truck rumbled past'},
   {w:'glisten',s:'After the rain stopped, the wet leaves began to glisten in the bright morning sun.',
    k:'to shine',d:['to smell','to fall','to grow'],c:'in the bright morning sun'},
-  {w:'murmur',s:'The class had to murmur so that the baby in the next room would not wake up.',
+  {w:'murmur',s:'Our voices fell to a murmur so that the baby in the next room would not wake up.',
    k:'to talk very softly',d:['to shout out very loud','to run in circles','to clap for fun'],c:'the baby in the next room would not wake up'},
   {w:'dash',s:'The rain started all at once, so we made a quick dash from the car to the front door.',
    k:'a fast run',d:['a slow walk','a long nap','a big meal'],c:'The rain started all at once'},
@@ -11203,11 +11283,13 @@ function maxLvlFor(w){return 3;}
    never stall a mission. */
 function fam(list){
   const total=list.reduce((s,e)=>s+e[0],0);
+  let lastF=null; /* variety guard: the same question family never runs twice in a row */
   return function(L){
     for(let attempt=0;attempt<12;attempt++){
       let r=Math.random()*total,f=list[0][1];
       for(const e of list){r-=e[0];if(r<=0){f=e[1];break;}}
-      try{const Q=f(L);if(Q&&Q.choices&&Q.choices.length)return Q;}catch(e){}
+      if(list.length>1&&f===lastF&&attempt<10)continue;
+      try{const Q=f(L);if(Q&&Q.choices&&Q.choices.length){lastF=f;return Q;}}catch(e){}
     }
     return genOps(1);
   };
@@ -11646,16 +11728,17 @@ function renderHome(){
   gp.className='goal-card';gp.id='gpCard';
   const qMeter=(v,max)=>`<div class="qual-meter"><div style="width:${Math.min(100,Math.round(v/max*100))}%"></div></div>`;
   const qRow=(name,v,max,done)=>`<div class="qual-row ${done?'done':''}"><span class="qname">${name}</span>${qMeter(v,max)}<span class="qcount">${Math.min(v,max)}/${max}</span></div>`;
-  gp.innerHTML=`<h3><svg class="icon" style="color:var(--read)"><use href="#i-swords"/></svg>Grand Prix qualification</h3>
+  gp.innerHTML=`<h3><svg class="icon" style="color:var(--read)"><use href="#i-swords"/></svg>Game Reward: The Grand Prix</h3>
+    <p class="subtle" style="margin:2px 0 8px;font-size:13px">Training unlocks the game. Fill all three meters and the race is yours.</p>`+`
     ${qRow("Today's three missions",qual.m,3,S.daily.chest)}
     ${qRow('Questions answered today',qual.a,GP_REQ_A,qual.a>=GP_REQ_A)}
     ${qRow('Right answers today',qual.r,GP_REQ_R,qual.r>=GP_REQ_R)}
     <button class="gp-btn" id="gpGo" ${qual.ok?'':'disabled'}>
       <svg class="icon" style="stroke:currentColor"><use href="#i-bolt"/></svg>
-      ${qual.ok?(S.daily.raceWon?'RACE AGAIN':'START THE GRAND PRIX'):'Train to qualify'}</button>`;
+      ${qual.ok?(S.daily.raceWon?'PLAY AGAIN':'PLAY YOUR GAME REWARD'):'Finish training to unlock the game'}</button>`;
   $('goalList').parentNode.parentNode.insertBefore(gp,$('goalList').parentNode.nextSibling);
   $('goalList').parentNode.parentNode.appendChild(gp);
-  $('gpGo').onclick=()=>{if(gpQual().ok)startRace();else{sfx.tap();speak('Keep training. Finish the three meters to unlock the Grand Prix.');}};
+  $('gpGo').onclick=()=>{if(gpQual().ok)startRace();else{sfx.tap();speak('Keep training, hero. Finish the three meters and the game is yours.');}};
 }
 
 /* ============ map ============ */
@@ -11834,7 +11917,11 @@ function nextQuestion(){
   if(doneCond){endMission();return;}
   M.qWorld=M.worldId==='mix'?pick(WORLDS):worldById(M.worldId);
   const w=M.qWorld;
-  const L=M.boss?2:S.levels[w.id];
+  /* training runs hotter than comfort: two questions in five reach one step
+     above the child's ladder, so the road to the game is the rigorous part
+     and the game itself stays the reward */
+  const L=M.boss?2:(rint(1,5)<=2?Math.min(maxLvlFor(w),S.levels[w.id]+1):S.levels[w.id]);
+  M.qL=L;M.qReach=!M.boss&&L>S.levels[w.id];
   const Q=freshQ(L2=>w.gen(L2),L,()=>genOps(1));
   M.q=Q;M.phase='pick';M.picked=null;
   M.golden=!M.boss&&Math.random()<.12;
@@ -11897,7 +11984,7 @@ function checkAnswer(){
   const w=M.qWorld,c=M.q.choices[M.picked];
   const buttons=[...$('choices').children];
   buttons.forEach(b=>b.disabled=true);
-  const L=M.boss?2:S.levels[w.id];
+  const L=M.qL!=null?M.qL:(M.boss?2:S.levels[w.id]);
   M.asked++;if(L>=2)M.hi++;
   const pw=S.perWorld[w.id][L];pw.a++;
   if(!S.perDomain)S.perDomain={};
@@ -11928,7 +12015,7 @@ function checkAnswer(){
     $('coachMsg').style.display='block';
     $('coachMsg').textContent=p+(M.golden?` Golden question! ${coin} coins.`:'');
     speak(p);
-    if(!M.boss&&ladderRecord(w.id,true)==='up'&&S.levels[w.id]<maxLvlFor(w)){
+    if(!M.boss&&!M.qReach&&ladderRecord(w.id,true)==='up'&&S.levels[w.id]<maxLvlFor(w)){
       S.levels[w.id]++;
       queueCeremony(worldArt(w.id),'Bigger questions unlocked',`${w.name} just moved up a step. You earned it.`,()=>{sfx.levelup();});
     }
@@ -11944,7 +12031,7 @@ function checkAnswer(){
     $('coachMsg').innerHTML=enc+(M.q.explain?`<span class="ex"></span>`:'');
     if(M.q.explain)$('coachMsg').querySelector('.ex').textContent=M.q.explain;
     speak(enc+' '+(M.q.explain||''));
-    if(!M.boss&&ladderRecord(w.id,false)==='down'&&S.levels[w.id]>1)S.levels[w.id]--;
+    if(!M.boss&&!M.qReach&&ladderRecord(w.id,false)==='down'&&S.levels[w.id]>1)S.levels[w.id]--;
   }
   M.idx++;
   renderPips();
@@ -12004,7 +12091,7 @@ function endMission(){
   let chestJustDone=false;
   if(!S.daily.chest&&S.daily.done.length>=3){S.daily.chest=true;chestJustDone=true;
     queueCeremony(`<svg viewBox="0 0 24 24" width="170" height="170" style="stroke:var(--gold);fill:none;stroke-width:1.6"><use href="#i-chest"/></svg>`,
-      'Daily chest unlocked','A card pack is inside. Now hit your question goals to qualify for the Grand Prix.',()=>sfx.chest());}
+      'Daily chest unlocked','A card pack is inside. Now hit your question goals to unlock the Game Reward.',()=>sfx.chest());}
   S.daily.missions++;
   // pack
   pendingPack=null;
@@ -12126,6 +12213,17 @@ function renderStuff(){
 }
 
 /* ============ grown-ups ============ */
+function parentSetRate(r){
+  S.rate=r;save();renderParent();
+  speak('This is how I will read to your hero.');
+}
+function parentSetVoice(name){
+  S.voiceName=name||'';save();pickVoice();renderParent();
+  if(name)speak('Hello. This is the voice you picked.');
+}
+function parentTestVoice(){
+  speak('Listen to the story. The little fox waited by the bridge until the rain stopped. Now here is the question.');
+}
 function parentSetGrade(g){
   if(!(g>=0&&g<=5))return;
   S.grade=g;
@@ -12145,6 +12243,17 @@ function renderParent(){
   rows+=`<div class="pstat"><span>Class and grade</span><b>${esc(pgd.cls)}, ${pgd.label.toLowerCase()}</b></div>`;
   rows+=`<div class="pstat"><span>Change grade</span><b>${GRADE_DEFS.map(d=>
     `<button class="gmini${d.g===curGrade()?' on':''}" onclick="parentSetGrade(${d.g})">${d.short}</button>`).join('')}</b></div>`;
+  const rateNow=S.rate||0.92;
+  rows+=`<div class="pstat"><span>Reading speed</span><b>${[['Gentle',0.85],['Standard',0.92],['Brisk',1.0]].map(x=>
+    `<button class="gmini${Math.abs(rateNow-x[1])<0.01?' on':''}" onclick="parentSetRate(${x[1]})">${x[0]}</button>`).join('')}</b></div>`;
+  if('speechSynthesis' in window&&!NativeTTS){
+    const vlist=speechSynthesis.getVoices().filter(v=>v.lang&&v.lang.startsWith('en')).slice(0,20);
+    if(vlist.length){
+      rows+=`<div class="pstat"><span>Reading voice</span><b><select class="gmini" style="max-width:170px" onchange="parentSetVoice(this.value)">
+        ${['(automatic)'].concat(vlist.map(v=>v.name)).map(n=>`<option value="${n==='(automatic)'?'':esc(n)}"${(S.voiceName||'')===(n==='(automatic)'?'':n)?' selected':''}>${esc(n)}</option>`).join('')}
+      </select> <button class="gmini" onclick="parentTestVoice()">Test</button></b></div>`;
+    }
+  }
   rows+=`<div class="pstat"><span style="font-size:12px;color:var(--ink2)">Changing the grade changes every question to that grade's level. Stars, streaks and coins stay.</span><b></b></div>`;
   rows+=`<div class="pstat"><span>Today’s play time</span><b>${S.playLog[t]||0} min</b></div>`;
   rows+=`<div class="pstat"><span>Days in a row</span><b>${S.streakDays}</b></div>`;
@@ -12407,7 +12516,7 @@ function startQTimer(){
   $('raceTimerFill').style.width='100%';
   R.timerId=setInterval(()=>{
     if(!R||R.answered){clearQTimer();return;}
-    if('speechSynthesis' in window&&speechSynthesis.speaking)return; // clock waits while the story is read
+    if(bridgeSpeaking()||('speechSynthesis' in window&&speechSynthesis.speaking))return; // clock waits while the story is read
     R.timeLeft--;
     $('raceTimerFill').style.width=Math.max(0,R.timeLeft/lim*100)+'%';
     if(R.timeLeft<=5&&R.timeLeft>0)sfx.beep(660);
@@ -12745,6 +12854,7 @@ function promptDelete(names){
   delete ROOT.profiles[match];
   if(ROOT.current===match)ROOT.current=Object.keys(ROOT.profiles)[0]||'';
   try{localStorage.setItem(ROOT_KEY,JSON.stringify(ROOT));}catch(e){}
+  persistNative();
   renderNameScreen();
 }
 $('nameGo').onclick=submitName;
@@ -12765,6 +12875,45 @@ if(!S.player){
   show('scr-home');
 }
 save();
+/* If iOS evicted web storage, the native mirror restores every profile. */
+(async function(){
+  if(!NativePrefs)return;
+  try{
+    const r=await NativePrefs.get({key:ROOT_KEY});
+    const nat=r&&r.value?JSON.parse(r.value):null;
+    const disk=JSON.parse(localStorage.getItem(ROOT_KEY)||'null');
+    const empty=!disk||!disk.profiles||!Object.keys(disk.profiles).length;
+    if(nat&&nat.profiles&&Object.keys(nat.profiles).length&&empty){
+      localStorage.setItem(ROOT_KEY,r.value);
+      load();
+      ensureWorldState();setupDaily();refreshTopbar();
+      if(S.player){renderHome();show('scr-home');}
+      else{renderNameScreen();show('scr-name');}
+    }else{
+      persistNative();
+    }
+  }catch(e){}
+})();
+/* Android back button: step home instead of quitting mid-mission. */
+try{
+  if(CAP&&CAP.App&&CAP.App.addListener){
+    CAP.App.addListener('backButton',function(){
+      try{
+        var home=document.getElementById('scr-home');
+        if(home&&home.classList.contains('active')){
+          if(CAP.App.minimizeApp)CAP.App.minimizeApp();
+        }else{
+          if(typeof leaveQuiz==='function')try{leaveQuiz();}catch(e){}
+          hushed();renderHome();show('scr-home');
+        }
+      }catch(e){}
+    });
+  }
+}catch(e){}
+/* Installable web app: register the service worker on the plain web only. */
+if('serviceWorker' in navigator&&!window.Capacitor&&(location.protocol==='https:'||location.hostname==='localhost')){
+  try{navigator.serviceWorker.register('./sw.js').catch(function(){});}catch(e){}
+}
 </script>
 </body>
 </html>
