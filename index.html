@@ -108,7 +108,9 @@
   .land-cta{display:block;width:100%;border:none;border-radius:16px;background:var(--coral);
     color:#fff;font:800 19px system-ui;padding:16px;cursor:pointer;box-shadow:var(--shadow);}
   .land-cta:active{transform:scale(.985);}
-  .land-free{font-size:13px;color:var(--ink2);margin:8px 0 22px;}
+  .land-note{font-size:13px;color:var(--ink2);margin:8px 0 18px;}
+  .land-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 0 14px;}
+  .land-chips span{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font:700 12px system-ui;color:var(--ink2);}
   .land-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;margin:0 0 20px;}
   .land-card{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 13px;}
   .land-card b{display:block;font-size:15px;margin-bottom:3px;color:var(--ink);}
@@ -117,6 +119,10 @@
   .land-honest{background:#FFF;border:1.5px solid var(--line);border-left:5px solid var(--gold);
     border-radius:12px;padding:12px 14px;text-align:left;font-size:13.5px;line-height:1.55;color:var(--ink2);margin:0 0 22px;}
   .land-foot{font-size:12px;color:var(--ink2);opacity:.8;}
+  .pcgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 10px;}
+  .pcell{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:10px 4px;text-align:center;}
+  .pcell b{display:block;font-size:20px;color:var(--ink);}
+  .pcell span{font-size:10.5px;line-height:1.25;display:block;color:var(--ink2);}
   .grade-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px;}
   .gcard{display:flex;flex-direction:column;align-items:center;gap:4px;background:#fff;
     border:2.5px solid #D9E4F7;border-radius:16px;padding:12px 6px;cursor:pointer;font-family:inherit;}
@@ -585,41 +591,17 @@
       <span id="landMascot"></span>
       <div class="land-mark">THE GIFTED LEAGUE</div>
       <h1>Get ready for gifted and talented testing, ten minutes a day</h1>
-      <p class="sub">Free daily math and reading training for kindergarten through fifth grade,
+      <p class="sub">Daily math and reading training for kindergarten through fifth grade,
         built around the skills gifted programs test. Every question is read aloud, so early
         readers train on their own. And your kid will ask to do it.</p>
       <button class="land-cta" id="landGo">Start today's training</button>
-      <p class="land-free">Free. No account. No ads. Works offline.</p>
-      <div class="land-h2">See a real question</div>
+      <p class="land-note">No account. No ads. Works offline.</p>
+      <div class="land-h2" style="margin-top:10px">See a real question</div>
       <div id="landDemo"></div>
-      <p class="land-free" style="margin-top:6px">A second grade ladder question. Spoken aloud, on a timer, like the real thing.</p>
-      <div class="land-h2">Built like the real test</div>
-      <div class="land-grid">
-        <div class="land-card"><b>10,000+ questions</b><span>Written and reviewed against grade standards, kindergarten through fifth.</span></div>
-        <div class="land-card"><b>Six grade ladders</b><span>Pick a grade, and every question, timer and challenge follows it.</span></div>
-        <div class="land-card"><b>Read-aloud everything</b><span>Stories, prompts and questions spoken, so early readers train independently.</span></div>
-        <div class="land-card"><b>Never the same day twice</b><span>Questions never repeat within a day, and training reaches above grade level.</span></div>
-      </div>
-      <div class="land-h2">Why kids ask to practice</div>
-      <p class="land-free" style="text-align:left;margin:0 0 10px">You stop being the homework enforcer.
-        These mechanics keep your child coming back, earned with real work, never purchases.</p>
-      <div class="land-grid">
-        <div class="land-card"><b>Streaks &amp; the daily chest</b><span>Show up, keep the flame alive, open the chest.</span></div>
-        <div class="land-card"><b>Hero cards to collect</b><span>New cards earned with real work, not luck.</span></div>
-        <div class="land-card"><b>The Game Reward</b><span>Hard training unlocks the Grand Prix race. The game is the prize.</span></div>
-        <div class="land-card"><b>Rising hero classes</b><span>Rocket Cadets to Galaxy Commanders, one grade at a time.</span></div>
-      </div>
-      <div class="land-honest"><b>Why is it free?</b> No ads, no accounts, no data collected, so there is
-        nothing to sell and no one to upsell. Gifted prep is usually a subscription. The whole program is here.
-        Inside the app, kids see Dr Sam&#8217;s Academy: their world, your peace of mind.</div>
-      <div class="land-honest"><b>A promise we keep honest:</b> no app can guarantee a gifted placement,
-        and any app that says otherwise is selling you something. What daily training moves is the
-        achievement side of every gifted pathway, and the calm of a child who has seen it all before test day.</div>
-      <div class="land-h2" style="margin-top:4px">Day one takes ten minutes</div>
-      <button class="land-cta landGo2" id="landGo2">Start today's training</button>
-      <p class="land-free">Free, no signup, right in this browser.</p>
-      <p class="land-foot">Nothing is collected. Everything stays on your device.
-        Add this page to your home screen and it becomes the app.</p>
+      <p class="land-note" style="margin-top:6px">A second grade ladder question. Spoken aloud,
+        on a timer, like the real thing.</p>
+      <p class="land-foot">Everything stays on your device. The full story for parents is
+        inside, in the Grown-ups tab.</p>
     </div>
   </div>
 
@@ -12299,6 +12281,35 @@ function renderParent(){
   const st=$('statList');
   let rows='';
   const t=todayStr();
+  /* On-device-only counters: the analytics substitute. Everything here is
+     computed live from data already stored in this browser; nothing is
+     tracked separately and nothing ever leaves the device. */
+  {
+    const dk=Object.keys(S.playLog||{});
+    const mins=dk.reduce((a,d)=>a+(S.playLog[d]||0),0);
+    let qa=0,qr=0;Object.keys(S.history||{}).forEach(d=>{qa+=S.history[d].a||0;qr+=S.history[d].r||0;});
+    const stars=Object.values(S.stars||{}).reduce((a,b)=>a+(b||0),0);
+    const cards=Object.keys(S.cards||{}).length;
+    let wkM=0,wkQ=0;
+    for(let i=0;i<7;i++){
+      const dd=new Date(Date.now()-i*864e5);
+      const k=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');
+      wkM+=S.playLog[k]||0;if(S.history&&S.history[k])wkQ+=S.history[k].a||0;
+    }
+    rows+=`<div style="font-weight:800;margin:0 0 6px;font-size:15px">At a glance</div>
+    <div class="pcgrid">
+      <div class="pcell"><b>${dk.length}</b><span>days practiced</span></div>
+      <div class="pcell"><b>${mins}</b><span>minutes trained</span></div>
+      <div class="pcell"><b>${qa}</b><span>questions answered</span></div>
+      <div class="pcell"><b>${qa?Math.round(qr/qa*100):0}%</b><span>answered right</span></div>
+      <div class="pcell"><b>${S.streakDays||0}</b><span>day streak now</span></div>
+      <div class="pcell"><b>${S.bestStreak||0}</b><span>best answer streak</span></div>
+      <div class="pcell"><b>${stars}</b><span>stars earned</span></div>
+      <div class="pcell"><b>${cards}</b><span>hero cards</span></div>
+      <div class="pcell"><b>${S.gpRuns||0}</b><span>Grand Prix races</span></div>
+    </div>`;
+    rows+=`<div class="pstat"><span style="font-size:12px;color:var(--ink2)">This week: ${wkM} minutes and ${wkQ} questions. Counted on this device only. Nothing is ever sent anywhere.</span><b></b></div>`;
+  }
   rows+=`<div class="pstat"><span>Student</span><b>${esc(S.player||'Not set')}</b></div>`;
   const pgd=gradeDef();
   rows+=`<div class="pstat"><span>Class and grade</span><b>${esc(pgd.cls)}, ${pgd.label.toLowerCase()}</b></div>`;
@@ -12371,6 +12382,14 @@ function renderParent(){
   $('renameBtn').onclick=()=>{save();renderNameScreen();show('scr-name');};
   $('parentInfo').innerHTML=`
     <h3><svg class="icon"><use href="#i-shield"/></svg>About this practice</h3>
+    <p><strong>The Gifted League, in brief:</strong> more than ten thousand questions written and
+    reviewed against grade standards, kindergarten through fifth grade. Six grade ladders, so every
+    question, timer and challenge follows the grade you pick. Everything is read aloud, so early
+    readers train independently. No question repeats within a day, and training reaches above grade
+    level. The motivation loop is earned, never bought: streaks and a daily chest, hero cards for
+    real work, rising hero classes from Rocket Cadets to Galaxy Commanders, and the Grand Prix race
+    that only hard training unlocks. The game is the prize, so you stop being the homework enforcer.
+    No account, no ads, and it works offline.</p>
     <p>Each of the ten worlds is built against one i-Ready Diagnostic domain and the Georgia Standards of Excellence strand Gwinnett teaches from. The five math worlds cover Number and Operations, Algebra and Algebraic Thinking, Measurement and Data, and Geometry. The five reading worlds cover Phonological Awareness, Phonics, High Frequency Words, Vocabulary, and Comprehension across both literature and informational text. The domain and standard for each world are printed next to it in the Progress list above, so you can see exactly what a score refers to.</p>
     <p>Every world runs three steps. Step 1 blends kindergarten and first grade. Step 2 is first into second. Step 3 is second grade in math and a third-grade stretch in reading. Math stops at the second-grade standard on purpose, because that is the ceiling of what the K-2 diagnostic asks; reading goes higher because i-Ready reading genuinely does. The passage and the question are always read aloud. The answer choices never are, in either the practice worlds or the Grand Prix, because reading the options is part of what the real test measures.</p>
     <p><strong>Being honest about the gifted process, and about what this app can and cannot move:</strong> Georgia State Board Rule 160-4-2-.38 sets two routes to eligibility. On the psychometric route a child must score at the 99th percentile on a norm-referenced test of mental ability, and for kindergarten through second grade it is the 99th, not the 96th, plus one qualifying achievement score. On the multiple-criteria route a child must meet the bar in any three of four areas: mental ability at the 96th percentile, achievement at the 90th percentile on the total battery or on total reading or total math, creativity at the 90th percentile, and motivation at the 90th percentile.</p>
@@ -12487,6 +12506,7 @@ sfx.lapUp=()=>{[440,554,659,880].forEach((f,i)=>tone(f,i*.09,.16,'triangle',.16)
 let R=null;
 function startRace(){
   if(!gpQual().ok)return;
+  S.gpRuns=(S.gpRuns||0)+1;save();
   hushed();leaveQuiz();
   R={lap:0,pos:[0,0,0,0],q:0,coins:0,streak:0,over:false};
   document.body.classList.add('race-mode');
