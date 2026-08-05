@@ -1,17 +1,35 @@
 {
-  "name": "Dr Sam's Academy",
-  "short_name": "Dr Sam's",
-  "description": "A K-5 math and reading practice academy. Every question read aloud, every grade its own hero class.",
+  "name": "The Gifted League \u00b7 Dr Sam's Academy",
+  "short_name": "Gifted League",
+  "description": "Get ready for gifted and talented testing, ten minutes a day. K-5 math and reading, every question read aloud.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#EFF5FF",
   "theme_color": "#2F6BFF",
-  "categories": ["education", "kids"],
+  "categories": [
+    "education",
+    "kids"
+  ],
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
