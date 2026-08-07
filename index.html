@@ -583,6 +583,11 @@
       <div id="goalList"></div>
       <div class="chest-note" id="chestNote"></div>
     </div>
+    <div class="goal-card" id="mgCard">
+      <h3><svg class="icon" style="color:var(--math)"><use href="#i-bolt"/></svg>Mind Gym</h3>
+      <p class="subtle" style="margin:2px 0 8px;font-size:13px">Figure puzzles, analogies and number patterns: the puzzle style ability tests use. Train here so nothing looks strange on test day.</p>
+      <button class="btn btn-quiet" id="mgOpen" style="width:100%">Enter the Mind Gym</button>
+    </div>
   </div>
 
   <!-- LANDING (first visit only: the parent-facing front door) -->
@@ -701,6 +706,23 @@
       <div id="statList"></div>
     </div>
     <div class="panel parent-note" id="parentInfo"></div>
+  </div>
+
+  <!-- MIND GYM (ability-test formats: matrices, odd-one-out, analogies, patterns) -->
+  <div class="screen" id="scr-mindgym">
+    <div class="quiz-head">
+      <button class="iconbtn" id="mgQuit" aria-label="Leave the Mind Gym"><svg class="icon"><use href="#i-x"/></svg></button>
+      <div class="wtag" id="mgCount" style="margin:0 auto"></div>
+    </div>
+    <div class="qcard">
+      <div class="wtag">Mind Gym</div>
+      <div class="qtext" id="mgText"></div>
+      <div class="qvisual" id="mgVisual"></div>
+      <div class="say-row"><button class="say" id="mgSay"><svg class="icon"><use href="#i-speaker"/></svg><span>Read it to me</span></button></div>
+      <div class="choices" id="mgChoices"></div>
+      <div class="action-row" id="mgAction"></div>
+      <div class="coach-row" aria-live="polite"><span id="mgCoachArt"></span><div class="coach-bubble" id="mgCoachMsg" style="display:none"></div></div>
+    </div>
   </div>
 
   <!-- BREAK -->
@@ -12293,6 +12315,9 @@ function parentSetVoice(name){
 function parentTestVoice(){
   speak('Listen to the story. The little fox waited by the bridge until the rain stopped. Now here is the question.');
 }
+function parentSetTestDate(v){
+  S.testDate=v||'';save();renderParent();
+}
 function parentSetGrade(g){
   if(!(g>=0&&g<=5))return;
   S.grade=g;
@@ -12335,6 +12360,18 @@ function renderParent(){
       <div class="pcell"><b>${S.gpRuns||0}</b><span>Grand Prix races</span></div>
     </div>`;
     rows+=`<div class="pstat"><span style="font-size:12px;color:var(--ink2)">This week: ${wkM} minutes and ${wkQ} questions. Counted on this device only. Nothing is ever sent anywhere.</span><b></b></div>`;
+    if(S.mg&&S.mg.a)rows+=`<div class="pstat"><span>Mind Gym puzzles (ability-test formats)</span><b>${S.mg.r}/${S.mg.a} right</b></div>`;
+  }
+  rows+=`<div class="pstat"><span>Test date</span><b><input type="date" class="gmini" style="font:700 13px system-ui;padding:6px 8px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)" value="${S.testDate||''}" onchange="parentSetTestDate(this.value)"></b></div>`;
+  if(S.testDate){
+    const dleft=Math.ceil((new Date(S.testDate+'T12:00:00')-new Date())/864e5);
+    let phase;
+    if(dleft<0)phase='That date has passed. Set the next test date when you have it.';
+    else if(dleft>60)phase='Build phase: ten relaxed minutes a day, worlds plus one Mind Gym session. Habit beats cramming.';
+    else if(dleft>30)phase='Strengthen phase: daily missions plus Mind Gym, and revisit any world sitting at step one.';
+    else if(dleft>7)phase='Sharpen phase: Super Mix daily, Mind Gym daily, and let the Grand Prix build calm under a clock.';
+    else phase='Taper week: short, happy sessions only. Confidence and sleep matter more than one more drill.';
+    rows+=`<div class="pstat"><span style="font-size:12px;color:var(--ink2)">${dleft>=0?`<b style="color:var(--ink)">${dleft} day${dleft===1?'':'s'} to test day.</b> `:''}${phase}</span><b></b></div>`;
   }
   rows+=`<div class="pstat"><span>Student</span><b>${esc(S.player||'Not set')}</b></div>`;
   const pgd=gradeDef();
@@ -12424,7 +12461,7 @@ function renderParent(){
     level. The motivation loop is earned, never bought: streaks and a daily chest, hero cards for
     real work, rising hero classes from Rocket Cadets to Galaxy Commanders, and the Grand Prix race
     that only hard training unlocks. The game is the prize, so you stop being the homework enforcer.
-    No account, no ads, and it works offline.</p>
+    No account, no ads, and it works offline. The Mind Gym adds the other half of gifted testing: the puzzle formats ability tests use (figure matrices, analogies, patterns), trained for familiarity and calm. No app can raise a true ability score, and this one does not claim to.</p>
     <p>Each of the ten worlds is built against one i-Ready Diagnostic domain and the Georgia Standards of Excellence strand Gwinnett teaches from. The five math worlds cover Number and Operations, Algebra and Algebraic Thinking, Measurement and Data, and Geometry. The five reading worlds cover Phonological Awareness, Phonics, High Frequency Words, Vocabulary, and Comprehension across both literature and informational text. The domain and standard for each world are printed next to it in the Progress list above, so you can see exactly what a score refers to.</p>
     <p>Every world runs three steps. Step 1 blends kindergarten and first grade. Step 2 is first into second. Step 3 is second grade in math and a third-grade stretch in reading. Math stops at the second-grade standard on purpose, because that is the ceiling of what the K-2 diagnostic asks; reading goes higher because i-Ready reading genuinely does. The passage and the question are always read aloud. The answer choices never are, in either the practice worlds or the Grand Prix, because reading the options is part of what the real test measures.</p>
     <p><strong>Being honest about the gifted process, and about what this app can and cannot move:</strong> Georgia State Board Rule 160-4-2-.38 sets two routes to eligibility. On the psychometric route a child must score at the 99th percentile on a norm-referenced test of mental ability, and for kindergarten through second grade it is the 99th, not the 96th, plus one qualifying achievement score. On the multiple-criteria route a child must meet the bar in any three of four areas: mental ability at the 96th percentile, achievement at the 90th percentile on the total battery or on total reading or total math, creativity at the 90th percentile, and motivation at the 90th percentile.</p>
@@ -12439,6 +12476,251 @@ function renderParent(){
 }
 
 
+
+/* ============ Mind Gym: ability-test format training ============
+   Figure matrices, odd-one-out, verbal analogies, number patterns, scaled
+   by grade. This trains the FORMATS ability tests use, for familiarity
+   and calm; it does not claim to raise a true ability score. */
+function mgStarPts(R){let p='';for(let i=0;i<10;i++){const r=i%2?R*0.45:R;const a=-Math.PI/2+i*Math.PI/5;p+=(i?'L':'M')+(r*Math.cos(a)).toFixed(1)+' '+(r*Math.sin(a)).toFixed(1);}return p+'Z';}
+function mgFigSVG(f,px){
+  px=px||70;
+  const fill=f.fill?'#2F6BFF':'#FFFFFF', st='#17233B';
+  const n=f.count||1, base=34*(f.size||1)*(n>1?0.55:1);
+  let inner='';
+  for(let i=0;i<n;i++){
+    const dx=(i-(n-1)/2)*(n>1?34:0);
+    let shp='';
+    const h=base/2;
+    if(f.sh==='cir')shp=`<circle cx="0" cy="0" r="${h}"/>`;
+    else if(f.sh==='sq')shp=`<rect x="${-h}" y="${-h}" width="${base}" height="${base}"/>`;
+    else if(f.sh==='tri')shp=`<path d="M0 ${-h} L${h} ${h} L${-h} ${h} Z"/>`;
+    else if(f.sh==='dia')shp=`<path d="M0 ${-h} L${h} 0 L0 ${h} L${-h} 0 Z"/>`;
+    else shp=`<path d="${mgStarPts(h*1.05)}"/>`;
+    inner+=`<g transform="translate(${dx} 0) rotate(${f.rot||0})" fill="${fill}" stroke="${st}" stroke-width="3.4" stroke-linejoin="round">${shp}</g>`;
+  }
+  return `<svg viewBox="-52 -52 104 104" width="${px}" height="${px}" aria-hidden="true">${inner}</svg>`;
+}
+const mgCellStyle='background:#fff;border:2px solid var(--line);border-radius:12px;width:86px;height:86px;display:flex;align-items:center;justify-content:center';
+function mgMatrixVisual(A,B,C){
+  return `<div style="display:grid;grid-template-columns:repeat(2,86px);gap:8px;justify-content:center;margin:4px 0">`+
+    `<div style="${mgCellStyle}">${mgFigSVG(A,72)}</div><div style="${mgCellStyle}">${mgFigSVG(B,72)}</div>`+
+    `<div style="${mgCellStyle}">${mgFigSVG(C,72)}</div><div style="${mgCellStyle};font:900 40px system-ui;color:var(--math)">?</div></div>`;
+}
+function mgTransforms(g){
+  const t=[
+    {k:'size',f:x=>({...x,size:x.size===1?0.65:1})},
+    {k:'fill',f:x=>({...x,fill:x.fill?0:1})},
+    {k:'count',f:x=>({...x,count:(x.count||1)>=3?1:(x.count||1)+1})}
+  ];
+  if(g>=2)t.push({k:'rot',f:x=>({...x,rot:((x.rot||0)+90)%360})});
+  return t;
+}
+const GYMSH=['cir','sq','tri','dia','star'];
+function mgOther(list,not){const c=list.filter(x=>x!==not);return c[rint(0,c.length-1)];}
+function mgMatrixQ(g){
+  const trs=mgTransforms(g);
+  const t1=trs[rint(0,trs.length-1)];
+  const two=g>=4&&Math.random()<0.6;
+  let t2=null;
+  if(two){const rest=trs.filter(x=>x.k!==t1.k);t2=rest[rint(0,rest.length-1)];}
+  const rotOn=t1.k==='rot'||(t2&&t2.k==='rot');
+  const shapes=rotOn?['tri']:GYMSH;
+  const A={sh:shapes[rint(0,shapes.length-1)],fill:rint(0,1),rot:0,size:1,count:1};
+  const C={...A};
+  if(rotOn)C.fill=A.fill?0:1;else C.sh=mgOther(shapes,A.sh);
+  const T=x=>t2?t2.f(t1.f(x)):t1.f(x);
+  const B=T(A), D=T(C);
+  const opts=[D,{...C},T(D),(trs.filter(x=>x.k!==t1.k)[0]||t1).f({...C})];
+  const seen={},clean=[];
+  opts.forEach(o=>{const k=JSON.stringify(o);if(!seen[k]){seen[k]=1;clean.push(o);}});
+  while(clean.length<4){
+    const alt={...D,sh:mgOther(GYMSH,D.sh)};
+    const k=JSON.stringify(alt);if(!seen[k]){seen[k]=1;clean.push(alt);}
+  }
+  const shuf=shuffle(clean.slice(0,4));
+  return {text:'The top two pictures follow a secret rule. Which picture finishes the bottom pair?',
+    visual:mgMatrixVisual(A,B,C),
+    choices:shuf.map(o=>({html:1,label:mgFigSVG(o,64)})),
+    key:shuf.findIndex(o=>JSON.stringify(o)===JSON.stringify(D)),
+    why:'The top pictures change the same way the bottom pictures must.',
+    say:'The top two pictures follow a secret rule. Find how the first picture changes into the second. Now pick the picture that finishes the bottom pair the same way.'};
+}
+function mgOddQ(g){
+  /* Real NNAT-style classification: the three that belong vary on
+     irrelevant attributes, balanced two-and-two so no value except the
+     rule value is unique. Only the rule attribute singles one out. */
+  const attrs=g>=2?['sh','fill','size','count']:['sh','fill','size'];
+  const a=attrs[rint(0,attrs.length-1)];
+  const s1=GYMSH[rint(0,4)], s2=mgOther(GYMSH,s1);
+  const F=(sh,fill,size,count)=>({sh,fill,rot:0,size,count});
+  let figs;
+  if(a==='sh')figs=[F(s1,1,1,1),F(s1,1,0.75,1),F(s1,0,1,1),F(s2,0,0.75,1)];
+  else if(a==='fill')figs=[F(s1,1,1,1),F(s2,1,1,1),F(s1,1,0.75,1),F(s2,0,0.75,1)];
+  else if(a==='size')figs=[F(s1,1,1,1),F(s2,1,1,1),F(s1,0,1,1),F(s2,0,0.6,1)];
+  else figs=[F(s1,1,1,2),F(s2,1,1,2),F(s1,1,0.75,2),F(s2,1,0.75,3)];
+  const shuf=shuffle(figs.map((f,i)=>({f,odd:i===3})));
+  return {text:'Which one does not belong?',
+    visual:'',
+    choices:shuf.map(o=>({html:1,label:mgFigSVG(o.f,64)})),
+    key:shuf.findIndex(o=>o.odd),
+    why:'Three of them match one rule. One breaks it.',
+    say:'Look at the four pictures. Three of them go together. Which one does not belong?'};
+}
+const GYMVB={
+  k1:[
+    ['PUPPY','DOG','KITTEN',['cat','mouse','milk','tail'],0],
+    ['HAND','GLOVE','HEAD',['hat','sock','arm','door'],0],
+    ['BIRD','NEST','BEE',['hive','wing','sky','flower'],0],
+    ['DAY','SUN','NIGHT',['moon','cloud','rain','bed'],0],
+    ['BIG','SMALL','HOT',['cold','warm','fire','summer'],0],
+    ['COW','CALF','CAT',['kitten','puppy','cub','chick'],0],
+    ['CAR','ROAD','BOAT',['water','garage','sky','street'],0],
+    ['UP','DOWN','IN',['out','over','around','under'],0],
+    ['SOCK','FOOT','MITTEN',['hand','ear','snow','thumb'],0],
+    ['HAPPY','SMILE','SAD',['cry','laugh','jump','sing'],0],
+    ['FISH','WATER','BIRD',['sky','cave','sea','dirt'],0]
+  ],
+  g23:[
+    ['AUTHOR','BOOK','PAINTER',['painting','brush','museum','color'],0],
+    ['CAPTAIN','SHIP','PILOT',['airplane','train','ocean','wing'],0],
+    ['BRANCH','TREE','PETAL',['flower','leaf','root','garden'],0],
+    ['FREEZING','COLD','BOILING',['hot','wet','soup','icy'],0],
+    ['KITTEN','CAT','TADPOLE',['frog','fish','pond','turtle'],0],
+    ['FINGER','HAND','TOE',['foot','shoe','leg','nail'],0],
+    ['WHISPER','QUIET','SHOUT',['loud','angry','mouth','echo'],0],
+    ['TEACHER','SCHOOL','DOCTOR',['hospital','apple','book','recess'],0],
+    ['WHEEL','BICYCLE','SAIL',['boat','wind','car','lake'],0],
+    ['SECOND','MINUTE','MINUTE',['hour','clock','day','watch'],0],
+    ['BEE','HONEY','COW',['milk','grass','barn','horn'],0]
+  ],
+  g45:[
+    ['DROUGHT','RAIN','FAMINE',['food','desert','money','land'],0],
+    ['LETTER','WORD','WORD',['sentence','alphabet','sound','page'],0],
+    ['GLACIER','ICE','DUNE',['sand','snow','rock','wave'],0],
+    ['VISIBLE','SEE','AUDIBLE',['hear','taste','touch','smell'],0],
+    ['SCULPTOR','STATUE','POET',['poem','pen','rhyme','song'],0],
+    ['THERMOMETER','TEMPERATURE','SCALE',['weight','music','fish','number'],0],
+    ['OPTIMIST','HOPEFUL','PESSIMIST',['gloomy','happy','careful','brave'],0],
+    ['SCARCE','PLENTIFUL','ANCIENT',['modern','old','ruined','historic'],0],
+    ['CHAPTER','NOVEL','VERSE',['poem','sentence','title','author'],0],
+    ['REVEAL','CONCEAL','EXPAND',['shrink','grow','explode','stretch'],0],
+    ['FLOCK','BIRDS','SCHOOL',['fish','books','desks','bells'],0],
+    ['GENEROUS','STINGY','HUMBLE',['boastful','quiet','poor','kind'],0]
+  ]
+};
+function mgVerbalQ(g){
+  const band=g<=1?'k1':(g<=3?'g23':'g45');
+  const bank=GYMVB[band];
+  let pick,tries=0;
+  do{pick=rint(0,bank.length-1);tries++;}while(GYM.used[band+pick]&&tries<30);
+  GYM.used[band+pick]=1;
+  const [a,b,c,opts,ki]=bank[pick];
+  const order=shuffle(opts.map((w,i)=>({w,ok:i===ki})));
+  return {text:`<b>${a}</b> goes with <b>${b}</b> the way <b>${c}</b> goes with&hellip;`,
+    visual:'', oneCol:false,
+    choices:order.map(o=>({label:o.w})),
+    key:order.findIndex(o=>o.ok),
+    why:`${a} and ${b} fit together the same way.`,
+    say:`${a} goes with ${b}, the way ${c} goes with... The choices are: ${order.map(o=>o.w).join(', ')}.`};
+}
+function mgNumQ(g){
+  let seq=[],key,why='The numbers change by the same rule each time.';
+  const grow=(st,fn,n)=>{let v=st;for(let i=0;i<n;i++){seq.push(v);v=fn(v,i);}key=v;};
+  if(g<=0){const st=rint(1,5);grow(st,v=>v+1,4);}
+  else if(g===1){const d=[2,5,10][rint(0,2)];grow(d*rint(1,3),v=>v+d,4);}
+  else if(g===2){const d=[3,4,-2][rint(0,2)];grow(d>0?rint(2,9):rint(12,20),v=>v+d,4);}
+  else if(g===3){const m=rint(0,2);
+    if(m===0)grow(rint(2,4),v=>v*2,4);
+    else if(m===1)grow(rint(3,9),v=>v+7,4);
+    else grow(rint(2,6),(v,i)=>v+(i%2?5:2),5);}
+  else if(g===4){const m=rint(0,2);
+    if(m===0)grow(rint(2,3),v=>v*3,4);
+    else if(m===1){for(let i=1;i<=4;i++)seq.push(i*i);key=25;why='They are the square numbers.';}
+    else {const d=rint(6,9);grow(rint(4,9),v=>v+d,4);}}
+  else {const m=rint(0,2);
+    if(m===0)grow(rint(1,3),v=>v*2+1,4);
+    else if(m===1){let t=0;for(let i=1;i<=4;i++){t+=i;seq.push(t);}key=15;why='Each step adds one more than the last.';}
+    else grow(rint(60,90),v=>v-7,4);}
+  const opts={};opts[key]=1;
+  const cands=[key+1,key-1,key+2,seq[seq.length-1],key+5,key-2];
+  const list=[key];
+  cands.forEach(c=>{if(list.length<4&&!opts[c]&&c>=0){opts[c]=1;list.push(c);}});
+  const order=shuffle(list);
+  return {text:`What number comes next?<br><b style="font-size:26px;letter-spacing:2px">${seq.join(', ')}, &hellip;</b>`,
+    visual:'', oneCol:false,
+    choices:order.map(n=>({label:String(n)})),
+    key:order.indexOf(key), why,
+    say:`What number comes next? ${seq.join(', ')}, and then what?`};
+}
+let GYM=null;
+function mgStart(){
+  S.mg=S.mg||{a:0,r:0};
+  GYM={i:0,r:0,used:{},types:shuffle(['mx','odd','vb','num','mx','odd','vb','num'])};
+  hushed();sfx.tap();show('scr-mindgym');mgNext();
+}
+function mgNext(){
+  if(GYM.i>=8){mgFinish();return;}
+  const g=curGrade(),ty=GYM.types[GYM.i];
+  const q=ty==='mx'?mgMatrixQ(g):ty==='odd'?mgOddQ(g):ty==='vb'?mgVerbalQ(g):mgNumQ(g);
+  GYM.q=q;GYM.phase='pick';
+  $('mgCount').textContent='Puzzle '+(GYM.i+1)+' of 8';
+  $('mgText').innerHTML=q.text;
+  $('mgVisual').innerHTML=q.visual||'';
+  $('mgCoachArt').innerHTML=mascotSVG('think',44);
+  const cm=$('mgCoachMsg');cm.style.display='none';cm.innerHTML='';
+  $('mgAction').innerHTML='';
+  const box=$('mgChoices');box.innerHTML='';
+  box.className='choices'+(q.oneCol?' one-col':'');
+  q.choices.forEach((c,i)=>{
+    const b=document.createElement('button');b.className='choice';
+    if(c.html)b.innerHTML=c.label;else b.textContent=c.label;
+    b.style.display='flex';b.style.alignItems='center';b.style.justifyContent='center';
+    b.onclick=()=>mgPick(i);
+    box.appendChild(b);
+  });
+  speak(q.say);
+}
+function mgPick(i){
+  if(!GYM||GYM.phase!=='pick')return;
+  GYM.phase='done';
+  S.mg.a++;
+  const ok=i===GYM.q.key;
+  const btns=[...$('mgChoices').children];
+  if(ok){btns[i].classList.add('correct');GYM.r++;S.mg.r++;S.coins=(S.coins||0)+1;sfx.correct();}
+  else{btns[i].classList.add('wrong');btns[GYM.q.key].classList.add('reveal');sfx.wrong();}
+  const cm=$('mgCoachMsg');
+  cm.innerHTML=ok?('Yes! '+GYM.q.why):('Good try. '+GYM.q.why);
+  cm.style.display='block';
+  $('mgCoachArt').innerHTML=mascotSVG(ok?'cheer':'think',44);
+  speak(ok?'Yes! '+GYM.q.why:'Good try. '+GYM.q.why);
+  const row=$('mgAction');row.innerHTML='';
+  const b=document.createElement('button');
+  b.className='btn btn-primary';
+  b.innerHTML='Next<svg class="icon" style="stroke:#fff;width:20px;height:20px"><use href="#i-next"/></svg>';
+  b.onclick=()=>{sfx.tap();GYM.i++;mgNext();};
+  row.appendChild(b);
+  save();
+}
+function mgFinish(){
+  const r=GYM.r;
+  $('mgCount').textContent='Mind Gym complete';
+  $('mgText').innerHTML=`Mind training done: <b>${r} of 8</b>${r>=6?'. Sharp as a tack!':'. Every puzzle makes you stronger.'}`;
+  $('mgVisual').innerHTML='<div style="text-align:center">'+mascotSVG(r>=6?'cheer':'idle',120)+'</div>';
+  $('mgChoices').innerHTML='';$('mgCoachMsg').style.display='none';$('mgCoachArt').innerHTML='';
+  const row=$('mgAction');row.innerHTML='';
+  const again=document.createElement('button');
+  again.className='btn btn-quiet';again.textContent='Train again';again.onclick=()=>mgStart();
+  const home=document.createElement('button');
+  home.className='btn btn-primary';home.textContent='Back to the Academy';
+  home.onclick=()=>{hushed();sfx.tap();renderHome();refreshTopbar();show('scr-home');};
+  row.appendChild(again);row.appendChild(home);
+  if(r>=6)sfx.fanfare();
+  speak(r>=6?`${r} of eight! Your thinking muscles are getting mighty.`:`${r} of eight. Puzzle power grows every day you train.`);
+  save();
+}
+$('mgOpen').onclick=mgStart;
+$('mgQuit').onclick=()=>{hushed();sfx.tap();renderHome();show('scr-home');};
+$('mgSay').onclick=()=>{if(GYM&&GYM.q)speak(GYM.q.say);};
 
 /* ============ race music (original, synthesized) ============ */
 const music={playing:false,timer:null,gain:null,step:0,urgent:false};
