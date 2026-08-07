@@ -776,6 +776,31 @@ const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'
 const rint=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const pick=a=>a[rint(0,a.length-1)];
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rint(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;}
+/* ===== The Gifted League: commercial structure (hard-coded, dormant) =====
+   Pilot: everything free and unlimited through 2027-02-07. After the pilot,
+   League Free stays free forever at ten minutes of training a day; paid
+   tiers unlock unlimited time and extras; Enterprise licenses a whole
+   organization by its email domain. PLANS.enforced stays false until real
+   accounts and billing exist; flipping pilot/enforced is the switch-on. */
+const PLANS={
+  pilot:true,
+  pilotEnd:'2027-02-07',
+  enforced:false,
+  tiers:{
+    free:{name:'League Free',price:0,dailyMinutes:10,
+      blurb:'Ten focused minutes of full training every day. All six grades, streaks, the daily chest, the Game Reward. Free forever.'},
+    pro:{name:'League Pro',priceMonthly:8.99,priceYearly:79,
+      blurb:'Unlimited daily training, mock test day mode, deep progress reports, every student profile unlocked.'},
+    advanced:{name:'League Advanced',priceMonthly:12.99,priceYearly:109,
+      blurb:'Everything in Pro, plus printable practice packs, weekly coaching plans, and early access to new worlds and seasons.'},
+    enterprise:{name:'League Enterprise',perStudentYearly:3.5,minimumYearly:299,
+      blurb:'Schools, districts, cities and counties. Licensed by organization email domain: every student with that address is in.'}
+  }
+};
+function planMinutesToday(){
+  if(PLANS.pilot||!PLANS.enforced)return Infinity;
+  return PLANS.tiers.free.dailyMinutes;
+}
 const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const cap=s=>s[0].toUpperCase()+s.slice(1);
 /* a or an, decided by the word that follows, so no item ever prints
@@ -12381,7 +12406,16 @@ function renderParent(){
   st.innerHTML=(rows||'<p class="parent-note">No rounds played yet.</p>')+
     '<button class="btn btn-quiet" id="renameBtn" style="margin-top:12px">Switch student or add a new one</button>';
   $('renameBtn').onclick=()=>{save();renderNameScreen();show('scr-name');};
-  $('parentInfo').innerHTML=`
+  let planRows='';
+  if(!PLANS.pilot){
+    const T=PLANS.tiers;
+    planRows=`<h3><svg class="icon"><use href="#i-shield"/></svg>Plans</h3>
+    <p><strong>${T.free.name}, $0:</strong> ${T.free.blurb}</p>
+    <p><strong>${T.pro.name}, $${T.pro.priceMonthly}/month or $${T.pro.priceYearly}/year:</strong> ${T.pro.blurb}</p>
+    <p><strong>${T.advanced.name}, $${T.advanced.priceMonthly}/month or $${T.advanced.priceYearly}/year:</strong> ${T.advanced.blurb}</p>
+    <p><strong>${T.enterprise.name}, $${T.enterprise.perStudentYearly} per student per year:</strong> ${T.enterprise.blurb}</p>`;
+  }
+  $('parentInfo').innerHTML=planRows+`
     <h3><svg class="icon"><use href="#i-shield"/></svg>About this practice</h3>
     <p><strong>The Gifted League, in brief:</strong> more than ten thousand questions written and
     reviewed against grade standards, kindergarten through fifth grade. Six grade ladders, so every
