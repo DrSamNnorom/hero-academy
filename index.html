@@ -119,6 +119,18 @@
   .land-honest{background:#FFF;border:1.5px solid var(--line);border-left:5px solid var(--gold);
     border-radius:12px;padding:12px 14px;text-align:left;font-size:13.5px;line-height:1.55;color:var(--ink2);margin:0 0 22px;}
   .land-foot{font-size:12px;color:var(--ink2);opacity:.8;}
+  #printArea{display:none;}
+  @media print{
+    body{background:#fff !important;}
+    body>*{display:none !important;}
+    body>#printArea{display:block !important;background:#fff;}
+    @page{margin:14mm;}
+    .pw-q{page-break-inside:avoid;break-inside:avoid;}
+    .pw-break{page-break-before:always;}
+  }
+  .ptools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 2px;}
+  .ptools button{font:800 13px system-ui;padding:11px 8px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;}
+  .ptools button:active{transform:scale(.98);}
   .pcgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 10px;}
   .pcell{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:10px 4px;text-align:center;}
   .pcell b{display:block;font-size:20px;color:var(--ink);}
@@ -587,6 +599,7 @@
       <h3><svg class="icon" style="color:var(--math)"><use href="#i-bolt"/></svg>Mind Gym</h3>
       <p class="subtle" style="margin:2px 0 8px;font-size:13px">Figure puzzles, analogies and number patterns: the puzzle style ability tests use. Train here so nothing looks strange on test day.</p>
       <button class="btn btn-quiet" id="mgOpen" style="width:100%">Enter the Mind Gym</button>
+      <p class="subtle" id="mgModeLine" style="margin:8px 0 0;font-size:12px"></p>
     </div>
   </div>
 
@@ -725,6 +738,23 @@
     </div>
   </div>
 
+  <!-- MOCK TEST DAY -->
+  <div class="screen" id="scr-mock">
+    <div class="quiz-head">
+      <button class="iconbtn" id="mkQuit" aria-label="Leave the rehearsal"><svg class="icon"><use href="#i-x"/></svg></button>
+      <div class="wtag" id="mkCount" style="margin:0 auto"></div>
+      <div class="wtag" id="mkClock" style="opacity:.6;font-variant-numeric:tabular-nums"></div>
+    </div>
+    <div class="qcard">
+      <div class="wtag" id="mkSection"></div>
+      <div class="qtext" id="mkText"></div>
+      <div class="qvisual" id="mkVisual"></div>
+      <div class="say-row"><button class="say" id="mkSay"><svg class="icon"><use href="#i-speaker"/></svg><span>Read it to me</span></button></div>
+      <div class="choices" id="mkChoices"></div>
+      <div class="action-row" id="mkAction"></div>
+    </div>
+  </div>
+
   <!-- BREAK -->
   <div class="screen" id="scr-break">
     <div class="center-card">
@@ -785,6 +815,7 @@
 </div>
 
 <!-- NAV -->
+<div id="printArea"></div>
 <div class="navbar" id="navbar">
   <button class="navbtn active" id="navHome"><svg class="icon"><use href="#i-home"/></svg>Home</button>
   <button class="navbtn" id="navMap"><svg class="icon"><use href="#i-map"/></svg>Worlds</button>
@@ -11829,6 +11860,8 @@ function renderHome(){
       ${qual.ok?(S.daily.raceWon?'PLAY AGAIN':'PLAY YOUR GAME REWARD'):'Finish training to unlock the game'}</button>`;
   $('goalList').parentNode.parentNode.insertBefore(gp,$('goalList').parentNode.nextSibling);
   $('goalList').parentNode.parentNode.appendChild(gp);
+  const mml=$('mgModeLine');
+  if(mml)mml.textContent='Training mix: '+TEST_MODES[testMode()].name+'. A grown-up can change this in the Grown-ups tab.';
   $('gpGo').onclick=()=>{if(gpQual().ok)startRace();else{sfx.tap();speak('Keep training, hero. Finish the three meters and the game is yours.');}};
 }
 
@@ -12373,6 +12406,18 @@ function renderParent(){
     else phase='Taper week: short, happy sessions only. Confidence and sleep matter more than one more drill.';
     rows+=`<div class="pstat"><span style="font-size:12px;color:var(--ink2)">${dleft>=0?`<b style="color:var(--ink)">${dleft} day${dleft===1?'':'s'} to test day.</b> `:''}${phase}</span><b></b></div>`;
   }
+  rows+=`<div class="pstat"><span>Which test are you preparing for?</span><b>${Object.keys(TEST_MODES).map(k=>
+    `<button class="gmini${testMode()===k?' on':''}" onclick="parentSetTestMode('${k}')">${TEST_MODES[k].name}</button>`).join('')}</b></div>`;
+  rows+=`<div class="pstat"><span style="font-size:12px;color:var(--ink2)">${TEST_MODES[testMode()].note} This changes the Mind Gym mix only; the worlds keep following the grade. <span style="opacity:.75">${TEST_MODE_DISCLAIMER}</span></span><b></b></div>`;
+  {
+    const wk=weekStats(),ed=domainEdges();
+    rows+=`<div style="font-weight:800;margin:12px 0 2px;font-size:15px">This week's hero report</div>`;
+    rows+=`<div class="pstat"><span style="font-size:13px;line-height:1.55;color:var(--ink2)">${weekNarrative(wk,ed)}</span><b></b></div>`;
+    if((S.mocks||[]).length){
+      const last=S.mocks[S.mocks.length-1];
+      rows+=`<div class="pstat"><span>Last rehearsal (${last.d})</span><b>${last.got}/${last.tot} in ${last.mins} min</b></div>`;
+    }
+  }
   rows+=`<div class="pstat"><span>Student</span><b>${esc(S.player||'Not set')}</b></div>`;
   const pgd=gradeDef();
   rows+=`<div class="pstat"><span>Class and grade</span><b>${esc(pgd.cls)}, ${pgd.label.toLowerCase()}</b></div>`;
@@ -12440,9 +12485,25 @@ function renderParent(){
       rows+=`<div class="pstat"><span>${k}</span><b>${d.r}/${d.a} right</b></div>`;
     });
   }
-  st.innerHTML=(rows||'<p class="parent-note">No rounds played yet.</p>')+
+  const nProf=Object.keys(ROOT.profiles||{}).length||1;
+  const tools=`<div style="font-weight:800;margin:14px 0 2px;font-size:15px">Test day tools</div>
+    <p class="subtle" style="font-size:12px;margin:0 0 6px">A rehearsal runs ${mockTotal()} questions in three parts with no answers shown until the end, the way the real sitting feels.</p>
+    <button class="btn btn-primary" id="mockBtn" style="width:100%;margin-bottom:8px">Start Mock Test Day</button>
+    <div style="font-weight:800;margin:12px 0 2px;font-size:15px">Print</div>
+    <p class="subtle" style="font-size:12px;margin:0 0 4px">Packs are generated fresh every time, with an answer key on the last page. Choose your printer, or save as PDF.</p>
+    <div class="ptools">
+      ${Object.keys(PACK_KINDS).map(k=>`<button data-pack="${k}">${PACK_KINDS[k].name}</button>`).join('')}
+      <button data-report="week">Weekly hero report</button>
+      <button data-report="school">Group report${nProf>1?' ('+nProf+')':''}</button>
+    </div>`;
+  st.innerHTML=(rows||'<p class="parent-note">No rounds played yet.</p>')+tools+
     '<button class="btn btn-quiet" id="renameBtn" style="margin-top:12px">Switch student or add a new one</button>';
   $('renameBtn').onclick=()=>{save();renderNameScreen();show('scr-name');};
+  const mb=$('mockBtn');if(mb)mb.onclick=()=>mockStart();
+  st.querySelectorAll('[data-pack]').forEach(b=>b.onclick=()=>printPack(b.getAttribute('data-pack')));
+  st.querySelectorAll('[data-report]').forEach(b=>b.onclick=()=>{
+    b.getAttribute('data-report')==='week'?printWeekly():printSchool();
+  });
   let planRows='';
   if(!PLANS.pilot){
     const T=PLANS.tiers;
@@ -12485,10 +12546,10 @@ function mgStarPts(R){let p='';for(let i=0;i<10;i++){const r=i%2?R*0.45:R;const 
 function mgFigSVG(f,px){
   px=px||70;
   const fill=f.fill?'#2F6BFF':'#FFFFFF', st='#17233B';
-  const n=f.count||1, base=34*(f.size||1)*(n>1?0.55:1);
+  const n=Math.min(4,f.count||1), base=34*(f.size||1)*(n>1?(n>=4?0.42:0.55):1);
   let inner='';
   for(let i=0;i<n;i++){
-    const dx=(i-(n-1)/2)*(n>1?34:0);
+    const dx=(i-(n-1)/2)*(n>1?(n>=4?25:34):0);
     let shp='';
     const h=base/2;
     if(f.sh==='cir')shp=`<circle cx="0" cy="0" r="${h}"/>`;
@@ -12532,16 +12593,21 @@ function mgMatrixQ(g){
   const B=T(A), D=T(C);
   const opts=[D,{...C},T(D),(trs.filter(x=>x.k!==t1.k)[0]||t1).f({...C})];
   const seen={},clean=[];
-  opts.forEach(o=>{const k=JSON.stringify(o);if(!seen[k]){seen[k]=1;clean.push(o);}});
-  while(clean.length<4){
-    const alt={...D,sh:mgOther(GYMSH,D.sh)};
-    const k=JSON.stringify(alt);if(!seen[k]){seen[k]=1;clean.push(alt);}
+  opts.forEach(o=>{const k=mgVisKey(o);if(!seen[k]){seen[k]=1;clean.push(o);}});
+  let mguard=0;
+  while(clean.length<4&&mguard++<80){
+    const alt={...D};
+    const roll=rint(0,2);
+    if(roll===0)alt.sh=mgOther(GYMSH,alt.sh);
+    else if(roll===1)alt.fill=alt.fill?0:1;
+    else alt.count=rint(1,3);
+    const k=mgVisKey(alt);if(!seen[k]){seen[k]=1;clean.push(alt);}
   }
   const shuf=shuffle(clean.slice(0,4));
   return {text:'The top two pictures follow a secret rule. Which picture finishes the bottom pair?',
     visual:mgMatrixVisual(A,B,C),
     choices:shuf.map(o=>({html:1,label:mgFigSVG(o,64)})),
-    key:shuf.findIndex(o=>JSON.stringify(o)===JSON.stringify(D)),
+    key:shuf.findIndex(o=>mgVisKey(o)===mgVisKey(D)),
     why:'The top pictures change the same way the bottom pictures must.',
     say:'The top two pictures follow a secret rule. Find how the first picture changes into the second. Now pick the picture that finishes the bottom pair the same way.'};
 }
@@ -12611,9 +12677,10 @@ const GYMVB={
 function mgVerbalQ(g){
   const band=g<=1?'k1':(g<=3?'g23':'g45');
   const bank=GYMVB[band];
+  const U=gymUsed();
   let pick,tries=0;
-  do{pick=rint(0,bank.length-1);tries++;}while(GYM.used[band+pick]&&tries<30);
-  GYM.used[band+pick]=1;
+  do{pick=rint(0,bank.length-1);tries++;}while(U[band+pick]&&tries<30);
+  U[band+pick]=1;
   const [a,b,c,opts,ki]=bank[pick];
   const order=shuffle(opts.map((w,i)=>({w,ok:i===ki})));
   return {text:`<b>${a}</b> goes with <b>${b}</b> the way <b>${c}</b> goes with&hellip;`,
@@ -12652,16 +12719,180 @@ function mgNumQ(g){
     key:order.indexOf(key), why,
     say:`What number comes next? ${seq.join(', ')}, and then what?`};
 }
+/* ---- paper folding (CogAT/NNAT spatial visualization) ----
+   A 4x4 hole grid on a square sheet. One fold mirrors a punch across the
+   fold line; two folds mirror it into all four quadrants. The distractors
+   are the three mistakes children actually make: forgetting to mirror,
+   mirroring across the wrong line, and getting the count right but a
+   position wrong. */
+function mgHoleKey(hs){return hs.map(h=>h[0]+','+h[1]).sort().join(' ');}
+function mgSheetSVG(holes,opts){
+  opts=opts||{};
+  const px=opts.px||76, W=100;
+  const x0=opts.half==='v'?0:0, w=opts.half==='v'?50:(opts.half==='vh'?50:100);
+  const h=opts.half==='h'?50:(opts.half==='vh'?50:100);
+  let inner=`<rect x="0.5" y="0.5" width="${w-1}" height="${h-1}" rx="5" fill="#fff" stroke="#17233B" stroke-width="2.6"/>`;
+  /* fold lines stop at the edge of the sheet actually being drawn, so the
+     folded panel does not trail dashes off into empty space */
+  if(opts.foldLine==='v'||opts.foldLine==='vh')inner+=`<line x1="50" y1="1" x2="50" y2="${h-1}" stroke="#2F6BFF" stroke-width="2.2" stroke-dasharray="5 4"/>`;
+  if(opts.foldLine==='h'||opts.foldLine==='vh')inner+=`<line x1="1" y1="50" x2="${w-1}" y2="50" stroke="#2F6BFF" stroke-width="2.2" stroke-dasharray="5 4"/>`;
+  if(opts.arrow==='v')inner+=`<path d="M80 50 L58 50" stroke="#2F6BFF" stroke-width="2.6" fill="none" marker-end="url(#mgArrow)"/>`;
+  if(opts.arrow==='h')inner+=`<path d="M50 80 L50 58" stroke="#2F6BFF" stroke-width="2.6" fill="none" marker-end="url(#mgArrow)"/>`;
+  if(opts.arrow==='vh')inner+=`<path d="M78 72 L58 52" stroke="#2F6BFF" stroke-width="2.6" fill="none" marker-end="url(#mgArrow)"/>`;
+  (holes||[]).forEach(p=>{
+    inner+=`<circle cx="${12.5+25*p[0]}" cy="${12.5+25*p[1]}" r="7" fill="#17233B"/>`;
+  });
+  const vb=`0 0 ${opts.half==='v'||opts.half==='vh'?100:100} 100`;
+  return `<svg viewBox="${vb}" width="${px}" height="${px}" aria-hidden="true">`+
+    `<defs><marker id="mgArrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">`+
+    `<path d="M0 0 L6 3 L0 6 z" fill="#2F6BFF"/></marker></defs>${inner}</svg>`;
+}
+function mgFoldQ(g){
+  const two=g>=4;
+  const axis=two?'vh':(Math.random()<0.5?'v':'h');
+  const npunch=(!two&&g>=2&&Math.random()<0.5)?2:1;
+  const spots=[];
+  for(let c=0;c<(axis==='h'?4:2);c++)for(let r=0;r<(axis==='v'?4:2);r++)spots.push([c,r]);
+  const punches=shuffle(spots).slice(0,npunch);
+  const mirV=p=>[3-p[0],p[1]], mirH=p=>[p[0],3-p[1]];
+  let key=[];
+  punches.forEach(p=>{
+    if(axis==='v')key.push(p,mirV(p));
+    else if(axis==='h')key.push(p,mirH(p));
+    else key.push(p,mirV(p),mirH(p),mirV(mirH(p)));
+  });
+  const uniq=a=>{const s2={},o=[];a.forEach(p=>{const k=p[0]+','+p[1];if(!s2[k]){s2[k]=1;o.push(p);}});return o;};
+  key=uniq(key);
+  const cands=[key];
+  cands.push(uniq(punches.slice()));
+  cands.push(uniq(punches.concat(punches.map(axis==='h'?mirV:mirH))));
+  const shifted=key.map((p,i)=>i===0?[Math.min(3,(p[0]+1)%4),p[1]]:p);
+  cands.push(uniq(shifted));
+  cands.push(uniq(key.concat([[rint(0,3),rint(0,3)]])));
+  const seen={},opts=[];
+  cands.forEach(c=>{const k=mgHoleKey(c);if(!seen[k]&&c.length){seen[k]=1;opts.push(c);}});
+  let guard=0;
+  while(opts.length<4&&guard++<60){
+    const c=uniq(key.map(p=>Math.random()<0.4?[rint(0,3),rint(0,3)]:p));
+    const k=mgHoleKey(c);if(!seen[k]){seen[k]=1;opts.push(c);}
+  }
+  const shuf=shuffle(opts.slice(0,4));
+  const cellS='background:#fff;border:2px solid var(--line);border-radius:12px;padding:5px;display:flex;align-items:center;justify-content:center';
+  const arrowS='display:flex;align-items:center;font:900 22px system-ui;color:var(--math)';
+  const visual=`<div style="display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;margin:4px 0">`+
+    `<div style="${cellS}">${mgSheetSVG([],{px:66,foldLine:axis,arrow:axis})}</div>`+
+    `<div style="${arrowS}">&#8594;</div>`+
+    `<div style="${cellS}">${mgSheetSVG(punches,{px:66,half:axis,foldLine:axis})}</div>`+
+    `<div style="${arrowS}">&#8594;</div>`+
+    `<div style="${cellS};width:76px;height:76px;font:900 32px system-ui;color:var(--math)">?</div></div>`;
+  return {text:'The paper is folded, then '+(npunch>1?'holes are':'a hole is')+' punched through. Which picture shows the paper opened back up?',
+    visual:visual,
+    choices:shuf.map(o=>({html:1,label:mgSheetSVG(o,{px:66})})),
+    key:shuf.findIndex(o=>mgHoleKey(o)===mgHoleKey(key)),
+    why:'A punch goes through every layer, so each fold makes a matching hole on the other side.',
+    say:'The paper is folded, and then punched. Remember, the hole goes through every layer. Which picture shows the paper opened back up?'};
+}
+/* ---- figure series (CogAT/NNAT serial reasoning) ----
+   Options are deduped on a VISUAL key, not on the object, because a circle
+   turned ninety degrees is still the same circle on screen. Distinct data
+   that renders identically would put two correct answers on the page. */
+function mgVisKey(f){
+  const sh=f.sh, rot=f.rot||0;
+  const r=sh==='cir'?0:(sh==='sq'||sh==='dia')?(rot%90):(rot%360);
+  return [sh,f.fill?1:0,(f.size||1).toFixed(2),Math.min(4,f.count||1),r].join('|');
+}
+function mgSeriesRules(g){
+  const r=[
+    {k:'count',sh:1,f:(x,i)=>({...x,count:Math.min(4,1+i)})},
+    {k:'fill',sh:1,f:(x,i)=>({...x,fill:i%2?0:1})},
+    {k:'size',sh:1,f:(x,i)=>({...x,size:[1,0.8,0.6,0.4,0.3][i]})}
+  ];
+  if(g>=2){
+    r.push({k:'rot',tri:1,f:(x,i)=>({...x,sh:'tri',rot:(i*90)%360})});
+    r.push({k:'cyc',f:(x,i)=>({...x,sh:['cir','sq','tri'][i%3]})});
+  }
+  if(g>=4){
+    r.push({k:'rotfill',tri:1,f:(x,i)=>({...x,sh:'tri',rot:(i*90)%360,fill:i%2?0:1})});
+    r.push({k:'countfill',f:(x,i)=>({...x,count:Math.min(4,1+i),fill:i%2?0:1})});
+  }
+  return r;
+}
+function mgSeriesQ(g){
+  const rules=mgSeriesRules(g);
+  const R=rules[rint(0,rules.length-1)];
+  const base={sh:R.tri?'tri':GYMSH[rint(0,4)],fill:1,rot:0,size:1,count:1};
+  const step=i=>R.f(base,i);
+  const shown=[step(0),step(1),step(2)];
+  const ans=step(3);
+  const seen={},opts=[ans];seen[mgVisKey(ans)]=1;
+  const add=c=>{const k=mgVisKey(c);if(opts.length<4&&!seen[k]){seen[k]=1;opts.push(c);}};
+  [step(4),step(2),step(1),{...ans,fill:ans.fill?0:1},{...ans,sh:mgOther(GYMSH,ans.sh)}].forEach(add);
+  let sguard=0;
+  while(opts.length<4&&sguard++<80){
+    const c={...ans},roll=rint(0,3);
+    if(roll===0)c.sh=mgOther(GYMSH,c.sh);
+    else if(roll===1)c.fill=c.fill?0:1;
+    else if(roll===2)c.count=rint(1,4);
+    else c.size=[1,0.8,0.6,0.4][rint(0,3)];
+    add(c);
+  }
+  const shuf=shuffle(opts);
+  const cellS='background:#fff;border:2px solid var(--line);border-radius:12px;width:74px;height:74px;display:flex;align-items:center;justify-content:center';
+  const visual=`<div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin:4px 0">`+
+    shown.map(f=>`<div style="${cellS}">${mgFigSVG(f,62)}</div>`).join('')+
+    `<div style="${cellS};font:900 32px system-ui;color:var(--math)">?</div></div>`;
+  return {text:'These pictures follow a pattern. Which one comes next?',
+    visual:visual,
+    choices:shuf.map(o=>({html:1,label:mgFigSVG(o,62)})),
+    key:shuf.findIndex(o=>mgVisKey(o)===mgVisKey(ans)),
+    why:'Each picture changes the same way as the one before it.',
+    say:'These pictures follow a pattern. Look at how each one changes into the next. Which picture comes next?'};
+}
+/* ---- anti-repeat memory that survives outside a Gym session ----
+   Printable packs and Mock Test Day generate verbal items with no session
+   open, so the used-bank has to live somewhere that is always there. */
+let GYM_USED_FREE={},GYM_USED_OVERRIDE=null;
+function gymUsed(){
+  /* an artifact being built (a printable pack) owns its own memory, so one
+     pack can never print the same analogy twice however many were printed
+     before it */
+  if(GYM_USED_OVERRIDE)return GYM_USED_OVERRIDE;
+  if(typeof GYM!=='undefined'&&GYM&&GYM.used)return GYM.used;
+  if(Object.keys(GYM_USED_FREE).length>40)GYM_USED_FREE={};
+  return GYM_USED_FREE;
+}
+/* ---- one entry point for every puzzle type ---- */
+function mgMake(ty,g){
+  return ty==='mx'?mgMatrixQ(g):ty==='odd'?mgOddQ(g):ty==='vb'?mgVerbalQ(g)
+    :ty==='num'?mgNumQ(g):ty==='ser'?mgSeriesQ(g):mgFoldQ(g);
+}
+/* ---- named-test modes: reweight the mix toward the battery being sat ----
+   CogAT, OLSAT and NNAT are referenced nominatively to describe the format
+   a session rehearses. The disclaimer below states plainly that this app is
+   not affiliated with the test publishers. */
+const TEST_MODES={
+  all:{name:'All formats',note:'A balanced mix of every puzzle type.',
+    mix:['mx','vb','num','ser','odd','fold','vb','mx']},
+  cogat:{name:'CogAT\u00AE style',note:'Verbal, quantitative and nonverbal, the three batteries in even thirds.',
+    mix:['vb','vb','vb','num','num','mx','ser','fold']},
+  olsat:{name:'OLSAT\u00AE style',note:'Verbal reasoning weighted, with figural and quantitative alongside.',
+    mix:['vb','vb','vb','vb','ser','mx','num','odd']},
+  nnat:{name:'NNAT\u00AE style',note:'Entirely nonverbal: patterns, analogies, series and paper folding.',
+    mix:['mx','mx','odd','odd','ser','ser','fold','fold']}
+};
+const TEST_MODE_DISCLAIMER='CogAT is a registered trademark of Riverside Insights. OLSAT and NNAT are registered trademarks of Pearson Education. The Gifted League is an independent study aid and is not affiliated with, sponsored by, or endorsed by these companies.';
+function testMode(){return TEST_MODES[S.tmode]?S.tmode:'all';}
+function parentSetTestMode(m){S.tmode=m;save();renderParent();}
 let GYM=null;
 function mgStart(){
   S.mg=S.mg||{a:0,r:0};
-  GYM={i:0,r:0,used:{},types:shuffle(['mx','odd','vb','num','mx','odd','vb','num'])};
+  GYM={i:0,r:0,used:{},types:shuffle(TEST_MODES[testMode()].mix.slice())};
   hushed();sfx.tap();show('scr-mindgym');mgNext();
 }
 function mgNext(){
   if(GYM.i>=8){mgFinish();return;}
   const g=curGrade(),ty=GYM.types[GYM.i];
-  const q=ty==='mx'?mgMatrixQ(g):ty==='odd'?mgOddQ(g):ty==='vb'?mgVerbalQ(g):mgNumQ(g);
+  const q=mgMake(ty,g);
   GYM.q=q;GYM.phase='pick';
   $('mgCount').textContent='Puzzle '+(GYM.i+1)+' of 8';
   $('mgText').innerHTML=q.text;
@@ -12721,6 +12952,314 @@ function mgFinish(){
 $('mgOpen').onclick=mgStart;
 $('mgQuit').onclick=()=>{hushed();sfx.tap();renderHome();show('scr-home');};
 $('mgSay').onclick=()=>{if(GYM&&GYM.q)speak(GYM.q.say);};
+
+/* ============ printing: packs and reports ============ */
+const PW_CSS='font-family:Georgia,serif;color:#000;line-height:1.45;';
+function pwHead(title,sub){
+  return `<div style="${PW_CSS}border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:14px">`+
+    `<div style="font:bold 11px Arial;letter-spacing:.18em;color:#2F6BFF">THE GIFTED LEAGUE</div>`+
+    `<div style="font:bold 21px Georgia;margin-top:3px">${title}</div>`+
+    `<div style="font:12px Arial;color:#444;margin-top:3px">${sub}</div></div>`;
+}
+function doPrint(html){
+  const a=$('printArea');
+  a.innerHTML=html;
+  /* the browser's own print dialog handles save-as-PDF on every platform,
+     so packs work offline with no server and no third-party library */
+  setTimeout(()=>{try{window.print();}catch(e){}},60);
+}
+const PACK_KINDS={
+  gym:{name:'Mind Gym pack',title:'Mind Gym practice pack'},
+  math:{name:'Math pack',title:'Math practice pack'},
+  read:{name:'Reading pack',title:'Reading practice pack'},
+  mix:{name:'Mixed pack',title:'Mixed practice pack'}
+};
+function printPack(kind){
+  const g=curGrade(),gd=gradeDef();
+  const items=[];
+  const mix=TEST_MODES[testMode()].mix;
+  GYM_USED_OVERRIDE={};
+  try{
+    for(let i=0;i<12;i++){
+      let q=null,tries=0;
+      while(!q&&tries++<8){
+        if(kind==='gym')q=mgMake(mix[i%mix.length],g);
+        else if(kind==='math')q=mockWorldQ('math');
+        else if(kind==='read')q=mockWorldQ('read');
+        else q=(i%3===0)?mgMake(mix[i%mix.length],g):(i%3===1?mockWorldQ('math'):mockWorldQ('read'));
+      }
+      if(q)items.push(q);
+    }
+  }finally{GYM_USED_OVERRIDE=null;}
+  const L='ABCD';
+  let body=pwHead(PACK_KINDS[kind].title,
+    `${esc(S.player||'Student')} &middot; ${gd.label} &middot; ${todayStr()} &middot; ${items.length} questions`+
+    (kind==='gym'?` &middot; ${TEST_MODES[testMode()].name}`:''));
+  body+=`<div style="${PW_CSS}font-size:12px;color:#444;margin:-6px 0 14px">Work through these with a pencil. Answers are on the last page.</div>`;
+  items.forEach((q,i)=>{
+    body+=`<div class="pw-q" style="${PW_CSS}margin:0 0 18px;padding-bottom:10px;border-bottom:1px solid #ddd">`+
+      `<div style="font-size:14px"><b>${i+1}.</b> ${String(q.text).replace(/<br\s*\/?>/g,' ')}</div>`+
+      (q.visual?`<div style="margin:6px 0">${q.visual}</div>`:'')+
+      `<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">`+
+      q.choices.map((c,j)=>`<div style="min-width:110px;border:1px solid #999;border-radius:6px;padding:5px 8px;font-size:13px;display:flex;align-items:center;gap:6px">`+
+        `<b>${L[j]}.</b> ${c.label}</div>`).join('')+
+      `</div></div>`;
+  });
+  body+=`<div class="pw-break">${pwHead('Answer key',PACK_KINDS[kind].title+' &middot; '+todayStr())}`+
+    `<div style="${PW_CSS}display:flex;flex-wrap:wrap;gap:8px 22px;font-size:14px">`+
+    items.map((q,i)=>`<div><b>${i+1}.</b> ${L[q.key]}</div>`).join('')+`</div>`+
+    `<div style="${PW_CSS}font-size:11px;color:#555;margin-top:18px">Generated by The Gifted League. Every pack is generated fresh, so no two are the same.</div></div>`;
+  doPrint(body);
+}
+/* ---- weekly hero report ---- */
+function weekStats(st){
+  st=st||S;
+  const days=[],out={days:0,mins:0,a:0,r:0,best:null,bestPct:-1};
+  for(let i=0;i<7;i++){
+    const d=new Date(Date.now()-i*864e5);
+    days.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
+  }
+  days.forEach(k=>{
+    const m=(st.playLog||{})[k]||0, h=(st.history||{})[k];
+    if(m||h)out.days++;
+    out.mins+=m;
+    if(h){out.a+=h.a||0;out.r+=h.r||0;
+      const p=h.a?h.r/h.a:0;
+      if(h.a>=5&&p>out.bestPct){out.bestPct=p;out.best=k;}}
+  });
+  out.pct=out.a?Math.round(out.r/out.a*100):0;
+  out.mocks=(st.mocks||[]).filter(m=>days.indexOf(m.d)>=0);
+  return out;
+}
+function domainEdges(st){
+  st=st||S;
+  const d=st.perDomain||{},ks=Object.keys(d).filter(k=>d[k]&&d[k].a>=8);
+  if(ks.length<2)return null;
+  ks.sort((a,b)=>(d[b].r/d[b].a)-(d[a].r/d[a].a));
+  return {top:ks[0],topPct:Math.round(d[ks[0]].r/d[ks[0]].a*100),
+    low:ks[ks.length-1],lowPct:Math.round(d[ks[ks.length-1]].r/d[ks[ks.length-1]].a*100)};
+}
+function weekNarrative(w,ed){
+  const nm=esc(S.player||'Your hero');
+  if(!w.days)return nm+' has not trained this week. A ten minute session tomorrow restarts the habit, and the streak forgives one missed week.';
+  let t=nm+' trained on '+w.days+' of the last 7 days, '+w.mins+' minutes in all, and answered '+w.a+' questions at '+w.pct+' percent.';
+  if(w.pct>=85)t+=' That accuracy at this volume is the pattern of a child who finds the work easy; the ladder will keep reaching higher to stay interesting.';
+  else if(w.pct>=70)t+=' That is the healthy working range: hard enough to grow, comfortable enough to come back tomorrow.';
+  else if(w.a>0)t+=' Accuracy below seventy usually means the ladder is running a step hot, which is fine for short bursts and worth watching over a month.';
+  if(ed)t+=' Strongest area this week: '+ed.top+' at '+ed.topPct+' percent. The one to feed: '+ed.low+' at '+ed.lowPct+' percent.';
+  if(w.mocks.length)t+=' '+(w.mocks.length===1?'One rehearsal':w.mocks.length+' rehearsals')+' this week, most recently '+w.mocks[w.mocks.length-1].pct+' percent.';
+  if(S.testDate){
+    const dl=Math.ceil((new Date(S.testDate+'T12:00:00')-new Date())/864e5);
+    if(dl>=0)t+=' '+dl+' days to test day.';
+  }
+  return t;
+}
+function printWeekly(){
+  const w=weekStats(),ed=domainEdges(),gd=gradeDef();
+  let b=pwHead('Weekly hero report',`${esc(S.player||'Student')} &middot; ${gd.cls}, ${gd.label.toLowerCase()} &middot; week ending ${todayStr()}`);
+  const cellsty='border:1px solid #999;padding:8px 10px;font-size:13px';
+  b+=`<table style="${PW_CSS}border-collapse:collapse;width:100%;margin-bottom:14px"><tbody>`+
+    [['Days trained',w.days+' of 7'],['Minutes',String(w.mins)],['Questions answered',String(w.a)],
+     ['Answered right',w.pct+'%'],['Current day streak',String(S.streakDays||0)],
+     ['Mind Gym puzzles (all time)',(S.mg?S.mg.r+'/'+S.mg.a:'none yet')],
+     ['Rehearsals this week',String(w.mocks.length)]]
+      .map(r=>`<tr><td style="${cellsty}"><b>${r[0]}</b></td><td style="${cellsty}">${r[1]}</td></tr>`).join('')+
+    `</tbody></table>`;
+  b+=`<div style="${PW_CSS}font-size:14px;margin-bottom:12px">${weekNarrative(w,ed)}</div>`;
+  b+=`<div style="${PW_CSS}font-size:11px;color:#555;border-top:1px solid #ccc;padding-top:8px">`+
+    `All figures counted on this device only and never transmitted. No app can guarantee a gifted placement; what daily training moves is the achievement side of every gifted pathway.</div>`;
+  doPrint(b);
+}
+/* ---- school report: every student profile on this device ---- */
+function rosterRows(){
+  const all=Object.assign({},ROOT.profiles||{});
+  if(S.player)all[S.player]=S;
+  return Object.keys(all).map(nm=>{
+    const st=all[nm],w=weekStats(st);
+    let a=0,r=0;Object.keys(st.history||{}).forEach(k=>{a+=st.history[k].a||0;r+=st.history[k].r||0;});
+    const mins=Object.keys(st.playLog||{}).reduce((x,k)=>x+(st.playLog[k]||0),0);
+    const gi=(st.grade==null?1:st.grade);
+    return {nm,grade:(GRADE_DEFS[gi]||GRADE_DEFS[1]).label,days:Object.keys(st.playLog||{}).length,
+      mins,a,r,pct:a?Math.round(r/a*100):0,wk:w.days,wkMin:w.mins,
+      mg:st.mg?st.mg.r+'/'+st.mg.a:'-',mocks:(st.mocks||[]).length};
+  }).sort((x,y)=>x.nm.localeCompare(y.nm));
+}
+function printSchool(){
+  const rows=rosterRows();
+  const tot=rows.reduce((o,r)=>({a:o.a+r.a,r:o.r+r.r,mins:o.mins+r.mins}),{a:0,r:0,mins:0});
+  const avg=tot.a?Math.round(tot.r/tot.a*100):0;
+  let b=pwHead('Group progress report',`${rows.length} student${rows.length===1?'':'s'} &middot; ${todayStr()}`);
+  const th='border:1px solid #999;padding:6px 8px;font:bold 12px Arial;background:#EFF5FF;text-align:left';
+  const td='border:1px solid #999;padding:6px 8px;font-size:12px';
+  b+=`<table style="${PW_CSS}border-collapse:collapse;width:100%"><thead><tr>`+
+    ['Student','Grade','Days','Minutes','Questions','Right','This week','Mind Gym','Rehearsals']
+      .map(h=>`<th style="${th}">${h}</th>`).join('')+`</tr></thead><tbody>`+
+    rows.map(r=>`<tr>`+[esc(r.nm),r.grade,r.days,r.mins,r.a,r.pct+'%',r.wk+' days, '+r.wkMin+' min',r.mg,r.mocks]
+      .map(c=>`<td style="${td}">${c}</td>`).join('')+`</tr>`).join('')+
+    `</tbody><tfoot><tr>`+['Group total','','',tot.mins,tot.a,avg+'%','','','']
+      .map(c=>`<td style="${td};font-weight:bold;background:#f4f4f4">${c}</td>`).join('')+`</tr></tfoot></table>`;
+  b+=`<div style="${PW_CSS}font-size:11px;color:#555;margin-top:14px;border-top:1px solid #ccc;padding-top:8px">`+
+    `<b>Scope of this report:</b> it covers every student profile saved on this device. It is complete for a shared classroom tablet `+
+    `and for a family. It is not a district rollup: aggregating across many devices needs the licensed accounts service, and this report does not claim that coverage. `+
+    `No student data leaves the device; this page was generated locally.</div>`;
+  doPrint(b);
+}
+
+/* ============ Mock Test Day ============ */
+const MOCK_PLAN=[
+  {id:'v',name:'Part 1: Word Reasoning',n:5,
+   say:'Part one: word reasoning. Listen to each one, then pick the best answer.'},
+  {id:'q',name:'Part 2: Number Reasoning',n:5,
+   say:'Part two: number reasoning. Take your time and think it through.'},
+  {id:'n',name:'Part 3: Picture Reasoning',n:6,
+   say:'Part three: picture reasoning. Look carefully at every picture.'}
+];
+let MK=null;
+function mockWorldQ(sub){
+  try{
+    const pool=WORLDS.filter(x=>x.sub===sub);
+    const w=pool[rint(0,pool.length-1)];
+    const L=Math.max(1,Math.min(maxLvlFor(w),(S.levels&&S.levels[w.id])||1));
+    const Q=freshQ(L2=>w.gen(L2),L,()=>genOps(1));
+    if(!Q||!Q.choices)return null;
+    const k=Q.choices.findIndex(c=>c.correct);
+    if(k<0)return null;
+    return {text:Q.text,visual:Q.visual||'',
+      choices:Q.choices.map(c=>({html:c.html,label:c.label})),key:k,
+      say:dictate(Q)};
+  }catch(e){return null;}
+}
+function mockQ(sec,i,g){
+  if(sec==='v')return (i%2===1&&mockWorldQ('read'))||mgVerbalQ(g);
+  if(sec==='q')return (i%2===1&&mockWorldQ('math'))||mgNumQ(g);
+  return mgMake(['mx','ser','odd','fold','mx','ser'][i%6],g);
+}
+function mockStart(){
+  S.mocks=S.mocks||[];
+  MK={s:0,i:0,n:0,t0:Date.now(),scores:MOCK_PLAN.map(()=>0),phase:'brief'};
+  /* a rehearsal gets a clean anti-repeat memory, so no item repeats inside it */
+  GYM={i:0,r:0,used:{},types:[]};
+  hushed();sfx.tap();show('scr-mock');mockBrief();
+  MK.tick=setInterval(mockClock,1000);
+}
+function mockClock(){
+  if(!MK)return;
+  const el=$('mkClock');if(!el)return;
+  const t=Math.floor((Date.now()-MK.t0)/1000);
+  el.textContent=Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
+}
+function mockTotal(){return MOCK_PLAN.reduce((a,p)=>a+p.n,0);}
+function mockBrief(){
+  MK.phase='brief';
+  $('mkCount').textContent='Mock Test Day';
+  $('mkSection').textContent='Before we start';
+  $('mkText').innerHTML='Take one big breath in, and let it out slowly.';
+  $('mkVisual').innerHTML='<div style="text-align:center">'+mascotSVG('idle',120)+'</div>'+
+    '<p class="subtle" style="text-align:left;font-size:14px;line-height:1.6;margin:10px 2px 0">'+
+    'This is a practice run of test day. There are '+mockTotal()+' questions in three parts. '+
+    'I will read each one to you. Nobody tells you the answers until the very end, just like the real test. '+
+    'There is no rush and no timer that can run out. If you are not sure, pick your best guess and keep going.</p>';
+  $('mkChoices').innerHTML='';
+  const row=$('mkAction');row.innerHTML='';
+  const b=document.createElement('button');
+  b.className='btn btn-primary';b.textContent="I'm ready";
+  b.onclick=()=>{sfx.tap();MK.t0=Date.now();mockSection();};
+  row.appendChild(b);
+  speak("Mock test day. Take one big breath in, and let it out slowly. There are "+mockTotal()+" questions in three parts. I will read each one to you. Nobody tells you the answers until the very end, just like the real test. There is no rush, and no timer can run out. If you are not sure, pick your best guess and keep going.");
+}
+function mockSection(){
+  const p=MOCK_PLAN[MK.s];
+  MK.phase='intro';MK.st0=Date.now();
+  $('mkCount').textContent='Question '+(MK.n+1)+' of '+mockTotal();
+  $('mkSection').textContent=p.name;
+  $('mkText').innerHTML=p.name;
+  $('mkVisual').innerHTML='<div style="text-align:center">'+mascotSVG('cheer',110)+'</div>';
+  $('mkChoices').innerHTML='';
+  const row=$('mkAction');row.innerHTML='';
+  const b=document.createElement('button');
+  b.className='btn btn-primary';b.textContent='Start '+p.name.split(':')[0].toLowerCase();
+  b.onclick=()=>{sfx.tap();mockNext();};
+  row.appendChild(b);
+  speak(p.say);
+}
+function mockNext(){
+  const p=MOCK_PLAN[MK.s];
+  if(MK.i>=p.n){
+    MK.s++;MK.i=0;
+    if(MK.s>=MOCK_PLAN.length){mockFinish();return;}
+    mockSection();return;
+  }
+  const g=curGrade();
+  let q=null,tries=0;
+  while(!q&&tries++<6)q=mockQ(p.id,MK.i,g);
+  if(!q)q=mgMake('mx',g);
+  MK.q=q;MK.phase='ask';
+  $('mkCount').textContent='Question '+(MK.n+1)+' of '+mockTotal();
+  $('mkSection').textContent=p.name;
+  $('mkText').innerHTML=q.text;
+  $('mkVisual').innerHTML=q.visual||'';
+  const box=$('mkChoices');box.innerHTML='';
+  const plain=q.choices.map(c=>String(c.label).replace(/<[^>]*>/g,''));
+  box.className='choices'+(plain.some(t=>t.length>13)?' one-col':'');
+  q.choices.forEach((c,i)=>{
+    const b=document.createElement('button');b.className='choice';
+    if(c.html)b.innerHTML=c.label;else b.textContent=c.label;
+    b.style.display='flex';b.style.alignItems='center';b.style.justifyContent='center';
+    b.onclick=()=>mockPick(i);
+    box.appendChild(b);
+  });
+  $('mkAction').innerHTML='';
+  speak(q.say||String(q.text).replace(/<[^>]*>/g,' '));
+}
+function mockPick(i){
+  if(!MK||MK.phase!=='ask')return;
+  MK.phase='locked';
+  const btns=[...$('mkChoices').children];
+  btns.forEach(b=>b.disabled=true);
+  btns[i].classList.add('picked');
+  sfx.tap();
+  /* no right/wrong shown: that is the whole point of a rehearsal */
+  if(i===MK.q.key)MK.scores[MK.s]++;
+  MK.i++;MK.n++;
+  setTimeout(()=>{if(MK)mockNext();},260);
+}
+function mockFinish(){
+  clearInterval(MK.tick);
+  const mins=Math.max(1,Math.round((Date.now()-MK.t0)/60000));
+  const got=MK.scores.reduce((a,b)=>a+b,0),tot=mockTotal();
+  const pct=Math.round(got/tot*100);
+  S.mocks=(S.mocks||[]).concat([{d:todayStr(),pct,got,tot,mins}]).slice(-10);
+  save();
+  MK.phase='done';
+  $('mkCount').textContent='Rehearsal complete';
+  $('mkClock').textContent='';
+  $('mkSection').textContent='How it went';
+  $('mkText').innerHTML='You finished all '+tot+' questions: <b>'+got+' right</b>.';
+  const rows=MOCK_PLAN.map((p,i)=>
+    '<div class="pstat"><span>'+p.name.replace(/^Part \d+: /,'')+'</span><b>'+MK.scores[i]+'/'+p.n+'</b></div>').join('');
+  const note=pct>=85?'Sitting comfortably above the range most gifted screeners use for the achievement criterion. Keep the habit, and keep test day boring.'
+    :pct>=70?'A strong rehearsal. The formats are familiar; steady daily training is what moves the last stretch.'
+    :pct>=50?'A solid working rehearsal. Look at the weakest part above and spend the next two weeks there.'
+    :'Early days, and that is useful information rather than bad news. Short daily sessions in the weakest part above, and rehearse again in two weeks.';
+  $('mkVisual').innerHTML='<div style="text-align:center">'+mascotSVG(pct>=70?'cheer':'idle',110)+'</div>'+
+    '<div style="text-align:left;margin-top:8px">'+rows+
+    '<div class="pstat"><span>Time taken</span><b>'+mins+' min</b></div>'+
+    '<div class="pstat"><span style="font-size:12px;color:var(--ink2)"><b style="color:var(--ink)">For grown-ups:</b> '+note+
+    ' No app can promise a placement, and this rehearsal does not predict one. What it does show is how your child handles a full sitting.</span><b></b></div></div>';
+  $('mkChoices').innerHTML='';
+  const row=$('mkAction');row.innerHTML='';
+  const home=document.createElement('button');
+  home.className='btn btn-primary';home.textContent='Back to the Academy';
+  home.onclick=()=>{hushed();sfx.tap();renderHome();refreshTopbar();show('scr-home');MK=null;};
+  row.appendChild(home);
+  if(pct>=70)sfx.fanfare();
+  speak('All done. You answered '+got+' out of '+tot+' correctly. Finishing a whole test is the hard part, and you just did it.');
+}
+$('mkQuit').onclick=()=>{
+  if(MK&&MK.tick)clearInterval(MK.tick);
+  MK=null;hushed();sfx.tap();renderHome();refreshTopbar();show('scr-home');
+};
+$('mkSay').onclick=()=>{if(MK&&MK.q&&MK.phase==='ask')speak(MK.q.say||String(MK.q.text).replace(/<[^>]*>/g,' '));};
 
 /* ============ race music (original, synthesized) ============ */
 const music={playing:false,timer:null,gain:null,step:0,urgent:false};
