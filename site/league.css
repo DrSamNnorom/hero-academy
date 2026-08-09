@@ -192,15 +192,18 @@ section:last-of-type{border-bottom:none;}
   margin:0 0 22px;max-width:19ch;
 }
 .hallmark .line em{font-style:normal;color:var(--gold);}
-.hallmark p{font-size:16px;line-height:1.65;max-width:52ch;margin:0 0 16px;}
+.hallmark p{font-size:16px;line-height:1.65;margin:0 0 16px;}
+.hallmark .line{max-width:19ch;}
 .hallmark .sig{
   font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--gold);margin:26px 0 0;display:flex;align-items:center;gap:10px;
 }
 .hallmark .sig::before{content:'';width:26px;height:1px;background:var(--gold);flex:none;}
-.hallmark .hall-fig{float:right;width:300px;margin:-4px -4px 6px 34px;
-  shape-outside:circle(50%);shape-margin:18px;}
-.hallmark .hall-fig img{width:100%;height:auto;}
+.hallmark .hall-fig{float:right;width:290px;margin:-6px -22px 4px 24px;
+  shape-outside:circle(50%);shape-margin:14px;}
+.hallmark .hall-fig img{width:100%;height:auto;
+  -webkit-mask-image:linear-gradient(to right,#000 60%,rgba(0,0,0,.5) 84%,transparent 99%);
+  mask-image:linear-gradient(to right,#000 60%,rgba(0,0,0,.5) 84%,transparent 99%);}
 .hallmark .sig{clear:both;}
 
 /* ---------- footer ---------- */
