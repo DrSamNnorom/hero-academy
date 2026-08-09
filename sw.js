@@ -1,5 +1,5 @@
 /* Dr Sam's Academy service worker. Cache-first shell; bump CACHE_V per release. */
-const CACHE_V = 'drsam-k5-v4';
+const CACHE_V = 'drsam-k5-v5';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

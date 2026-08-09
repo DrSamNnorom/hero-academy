@@ -100,25 +100,73 @@
   .day-dot.today{border-color:var(--coral);border-width:2.5px;}
   .streak-line{text-align:center;font-weight:800;color:var(--ink);font-size:15px;margin-bottom:4px;}
   .avatar-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px 0 18px;}
+  /* ===== The Gifted League front door ===== */
+  body.landing-on{background:#070E22;}
   body.landing-on .topbar,body.landing-on .navbar{display:none !important;}
-  .land{max-width:520px;margin:0 auto;padding:26px 20px 40px;text-align:center;}
-  .land-mark{font:900 13px/1 system-ui;letter-spacing:.24em;color:#2F6BFF;margin:14px 0 6px;}
-  .land h1{font-size:34px;line-height:1.12;margin:4px 0 10px;color:var(--ink);}
-  .land .sub{font-size:16.5px;line-height:1.55;color:var(--ink2);margin:0 0 18px;}
-  .land-cta{display:block;width:100%;border:none;border-radius:16px;background:var(--coral);
-    color:#fff;font:800 19px system-ui;padding:16px;cursor:pointer;box-shadow:var(--shadow);}
-  .land-cta:active{transform:scale(.985);}
-  .land-note{font-size:13px;color:var(--ink2);margin:8px 0 18px;}
-  .land-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 0 14px;}
-  .land-chips span{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font:700 12px system-ui;color:var(--ink2);}
-  .land-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;margin:0 0 20px;}
-  .land-card{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 13px;}
-  .land-card b{display:block;font-size:15px;margin-bottom:3px;color:var(--ink);}
-  .land-card span{font-size:12.5px;line-height:1.45;color:var(--ink2);}
-  .land-h2{font:800 15px system-ui;letter-spacing:.06em;color:var(--ink);margin:2px 0 10px;text-transform:uppercase;}
-  .land-honest{background:#FFF;border:1.5px solid var(--line);border-left:5px solid var(--gold);
-    border-radius:12px;padding:12px 14px;text-align:left;font-size:13.5px;line-height:1.55;color:var(--ink2);margin:0 0 22px;}
-  .land-foot{font-size:12px;color:var(--ink2);opacity:.8;}
+  #scr-landing{
+    --lg-ink:#070E22; --lg-card:#0D1730; --lg-line:#1D2B4E;
+    --lg-paper:#F4F7FF; --lg-muted:#93A6CE; --lg-blue:#5A8CFF; --lg-gold:#E9B44C;
+    --lg-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    background:var(--lg-ink);color:var(--lg-paper);min-height:100vh;
+  }
+  .lg{max-width:540px;margin:0 auto;padding:22px 22px 46px;}
+  .lg-top{display:flex;align-items:center;gap:10px;margin-bottom:38px;}
+  .lg-crest{display:block;width:30px;height:30px;flex:none;}
+  .lg-mark{font:800 14px/1 system-ui;letter-spacing:.02em;color:var(--lg-paper);}
+  .lg-eyebrow{font-family:var(--lg-mono);font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--lg-blue);margin:0 0 14px;}
+  .lg-h1{font:900 40px/1.04 system-ui;letter-spacing:-.035em;color:var(--lg-paper);margin:0 0 16px;}
+  .lg-sub{font-size:16px;line-height:1.6;color:var(--lg-muted);margin:0 0 26px;max-width:31em;}
+  .lg-cta{display:block;width:100%;border:none;border-radius:13px;background:var(--lg-gold);
+    color:#0A1226;font:800 17px system-ui;letter-spacing:-.01em;padding:17px;cursor:pointer;
+    transition:transform .12s ease,box-shadow .2s ease;box-shadow:0 8px 26px rgba(233,180,76,.22);}
+  .lg-cta:hover{box-shadow:0 10px 32px rgba(233,180,76,.34);}
+  .lg-cta:active{transform:scale(.985);}
+  .lg-trust{font-family:var(--lg-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--lg-muted);opacity:.8;margin:12px 0 0;text-align:center;}
+  .lg-label{font-family:var(--lg-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--lg-muted);margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .lg-label span{background:var(--lg-blue);color:#061024;border-radius:3px;padding:2px 5px;font-weight:700;letter-spacing:.1em;}
+  .lg-demo{margin:44px 0 0;}
+  .lg-stage{background:var(--lg-card);border:1px solid var(--lg-line);border-radius:16px;padding:20px 18px;}
+  .lg-q{font:700 15px/1.4 system-ui;color:var(--lg-paper);margin:0 0 16px;}
+  .lg-matrix{display:grid;grid-template-columns:repeat(2,70px);gap:9px;justify-content:center;margin-bottom:16px;}
+  .lg-cell{width:70px;height:70px;border:1px solid var(--lg-line);border-radius:11px;
+    display:flex;align-items:center;justify-content:center;background:#091027;}
+  .lg-cell.ask{border-style:dashed;border-color:var(--lg-blue);color:var(--lg-blue);font:800 25px var(--lg-mono);}
+  .lg-cell.solved{border-color:var(--lg-blue);box-shadow:0 0 0 1px var(--lg-blue) inset;}
+  .lg-opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .lg-opt{border:1px solid var(--lg-line);border-radius:10px;padding:8px 2px;display:flex;
+    align-items:center;justify-content:center;background:#091027;opacity:.55;transition:opacity .3s ease,border-color .3s ease,background .3s ease;}
+  .lg-opt.on{opacity:1;border-color:var(--lg-blue);background:rgba(90,140,255,.1);}
+  .lg-fade{animation:lgIn .45s cubic-bezier(.2,.9,.25,1) both;}
+  @keyframes lgIn{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:scale(1)}}
+  .lg-rule{height:1px;background:var(--lg-line);margin:42px 0;position:relative;}
+  .lg-rule::after{content:'';position:absolute;left:50%;top:-3px;width:7px;height:7px;
+    transform:translateX(-50%) rotate(45deg);background:var(--lg-ink);border:1px solid var(--lg-line);}
+  .lg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;text-align:left;}
+  .lg-stats b{display:block;font:800 19.5px system-ui;letter-spacing:-.02em;color:var(--lg-paper);}
+  .lg-stats span{display:block;font-family:var(--lg-mono);font-size:9.5px;letter-spacing:.11em;
+    text-transform:uppercase;color:var(--lg-muted);margin-top:5px;line-height:1.5;}
+  .lg-day{margin:42px 0 0;}
+  .lg-step{display:grid;grid-template-columns:26px 1fr;gap:12px;padding-bottom:20px;position:relative;}
+  .lg-step:last-child{padding-bottom:0;}
+  .lg-step::before{content:'';position:absolute;left:12px;top:24px;bottom:2px;width:1px;background:var(--lg-line);}
+  .lg-step:last-child::before{display:none;}
+  .lg-num{width:25px;height:25px;border-radius:50%;border:1px solid var(--lg-line);background:var(--lg-card);
+    display:flex;align-items:center;justify-content:center;font-family:var(--lg-mono);font-size:10.5px;color:var(--lg-blue);z-index:1;}
+  .lg-step h3{font:800 15.5px system-ui;color:var(--lg-paper);margin:3px 0 4px;}
+  .lg-step p{font-size:13.5px;line-height:1.6;color:var(--lg-muted);margin:0;}
+  .lg-promise{margin:42px 0 0;border:1px solid var(--lg-line);border-left:2px solid var(--lg-gold);
+    border-radius:12px;padding:16px 18px;background:var(--lg-card);}
+  .lg-promise h3{font-family:var(--lg-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--lg-gold);margin:0 0 9px;}
+  .lg-promise p{font-size:13.5px;line-height:1.62;color:var(--lg-muted);margin:0;}
+  .lg-close{margin:42px 0 0;}
+  .lg-foot{margin:26px 0 0;text-align:center;font-size:12px;line-height:1.7;color:var(--lg-muted);opacity:.75;}
+  .lg-foot a{color:var(--lg-blue);text-decoration:none;border-bottom:1px solid rgba(90,140,255,.35);}
+  @media (max-width:360px){ .lg-h1{font-size:33px;} .lg-stats b{font-size:17.5px;} }
+  @media (prefers-reduced-motion:reduce){ .lg-fade{animation:none;} .lg-cta{transition:none;} }
   #printArea{display:none;}
   @media print{
     body{background:#fff !important;}
@@ -128,6 +176,20 @@
     .pw-q{page-break-inside:avoid;break-inside:avoid;}
     .pw-break{page-break-before:always;}
   }
+  .psec{border:1.5px solid var(--line);border-radius:14px;background:var(--card);margin-bottom:8px;}
+  .psec>summary{list-style:none;cursor:pointer;padding:13px 14px;font:800 14.5px system-ui;
+    color:var(--ink);display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;}
+  .psec>summary::-webkit-details-marker{display:none;}
+  .psec>summary::after{content:'';width:7px;height:7px;flex:none;margin-right:3px;
+    border-right:2.2px solid var(--ink2);border-bottom:2.2px solid var(--ink2);
+    transform:rotate(45deg);transition:transform .18s ease;}
+  .psec[open]>summary::after{transform:rotate(-135deg);}
+  .psec[open]>summary{border-bottom:1px solid var(--line);border-radius:14px 14px 0 0;}
+  .psec>summary:focus-visible{outline:3px solid var(--math);outline-offset:2px;}
+  .psec-tag{font:700 11px system-ui;color:var(--ink2);margin-left:auto;}
+  .psec-b{padding:8px 14px 14px;}
+  .psec-hint{font-size:12px;line-height:1.5;color:var(--ink2);margin:2px 0 10px;}
+  .psec-b .pstat:first-child{border-top:none;}
   .ptools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 2px;}
   .ptools button{font:800 13px system-ui;padding:11px 8px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;}
   .ptools button:active{transform:scale(.98);}
@@ -466,7 +528,7 @@
   .race-track.arcade .lname{position:absolute;left:4px;top:2px;font-size:10px;font-weight:900;color:#8FA0D0;letter-spacing:.05em;text-transform:uppercase;z-index:2;}
   .race-track.arcade .racer{top:10px;filter:drop-shadow(0 0 6px rgba(120,160,255,.45));z-index:2;}
   .racer.boost::before{content:'';position:absolute;right:92%;top:12px;width:26px;height:14px;border-radius:50%;
-    background:radial-gradient(ellipse at right,#FFD34E 10%,#FF8A3D 55%,transparent 75%);
+    background:radial-gradient(ellipse at right,#FFD34E 10%,#F5B02E 55%,transparent 75%);
     filter:blur(1px);animation:flick .18s infinite alternate;}
   @keyframes flick{from{transform:scaleX(1)}to{transform:scaleX(1.5);opacity:.7}}
   .pos-chip{position:absolute;right:4px;top:16px;font-size:11px;font-weight:900;color:#8FA0D0;
@@ -603,24 +665,77 @@
     </div>
   </div>
 
-  <!-- LANDING (first visit only: the parent-facing front door) -->
+  <!-- LANDING: the parent-facing front door, first visit only -->
   <div class="screen" id="scr-landing">
-    <div class="land">
-      <span id="landMascot"></span>
-      <div class="land-mark">THE GIFTED LEAGUE</div>
-      <h1>Get ready for gifted and talented testing</h1>
-      <p class="sub">Daily math and reading training for kindergarten through fifth grade,
-        built around the skills gifted programs test. Every question is read aloud, so early
-        readers train on their own. And your kid will ask to do it.</p>
-      <button class="land-cta" id="landGo">Start today's training</button>
-      <p class="land-note">No account. No ads. Works offline.</p>
-      <div class="land-chips">
-        <span>10,000+ reviewed questions</span>
-        <span>Kindergarten to 5th grade</span>
-        <span>Everything read aloud</span>
+    <div class="lg">
+      <header class="lg-top">
+        <svg class="lg-crest" viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M24 3.5 42.5 12v13.5c0 11.2-7.9 17.4-18.5 19.5C13.4 42.9 5.5 36.7 5.5 25.5V12z"
+                fill="none" stroke="#5A8CFF" stroke-width="2.2" stroke-linejoin="round"/>
+          <rect x="14.5" y="14.5" width="7.5" height="7.5" rx="1.6" fill="none" stroke="#F4F7FF" stroke-width="1.9"/>
+          <rect x="25.5" y="14.5" width="7.5" height="7.5" rx="1.6" fill="none" stroke="#F4F7FF" stroke-width="1.9"/>
+          <rect x="14.5" y="25.5" width="7.5" height="7.5" rx="1.6" fill="none" stroke="#F4F7FF" stroke-width="1.9"/>
+          <rect x="25.5" y="25.5" width="7.5" height="7.5" rx="1.6" fill="#E9B44C"/>
+        </svg>
+        <span class="lg-mark">The Gifted League</span>
+      </header>
+
+      <p class="lg-eyebrow">Kindergarten to fifth grade</p>
+      <h1 class="lg-h1">Get ready for gifted and talented testing</h1>
+      <p class="lg-sub">Daily math, reading and reasoning training built around what gifted
+        programs actually test. Every question is read aloud, so early readers train on their own.
+        And your child will ask to do it.</p>
+      <button class="lg-cta" id="landGo">Start today's training</button>
+      <p class="lg-trust">No account &middot; No ads &middot; Works offline</p>
+
+      <section class="lg-demo">
+        <div class="lg-label"><span>Live</span> a real question from the app</div>
+        <div class="lg-stage" id="landDemo"></div>
+      </section>
+
+      <div class="lg-rule"></div>
+
+      <section class="lg-stats">
+        <div><b>10,000+</b><span>reviewed questions</span></div>
+        <div><b>K&ndash;5</b><span>six grade ladders</span></div>
+        <div><b>Aloud</b><span>every question spoken</span></div>
+      </section>
+
+      <section class="lg-day">
+        <div class="lg-label">What ten minutes looks like</div>
+        <div class="lg-step">
+          <span class="lg-num">1</span>
+          <div><h3>Train</h3><p>Math and reading at your child's grade, plus the reasoning
+            puzzles ability tests are built from: matrices, analogies, series, paper folding.</p></div>
+        </div>
+        <div class="lg-step">
+          <span class="lg-num">2</span>
+          <div><h3>Earn the game</h3><p>Finish the day's training and the Grand Prix unlocks.
+            The game is the prize, so you stop being the homework enforcer.</p></div>
+        </div>
+        <div class="lg-step">
+          <span class="lg-num">3</span>
+          <div><h3>See what happened</h3><p>The Grown-ups tab keeps the numbers: minutes,
+            accuracy, the domain that needs feeding, and a rehearsal score before test day.</p></div>
+        </div>
+      </section>
+
+      <div class="lg-promise">
+        <h3>A promise we keep honest</h3>
+        <p>No app can guarantee a gifted placement, and any app that says otherwise is selling
+          you something. What daily training moves is the achievement side of every gifted
+          pathway, and the calm of a child who has seen it all before.</p>
       </div>
-      <p class="land-foot">Everything stays on your device. The full story for parents is
-        inside, in the Grown-ups tab.</p>
+
+      <div class="lg-close">
+        <button class="lg-cta" id="landGo2">Start today's training</button>
+        <p class="lg-trust">Ten minutes. Right here in this browser.</p>
+      </div>
+
+      <footer class="lg-foot">
+        <p>Everything stays on your device. Nothing is collected.</p>
+        <p><a href="site/index.html" id="landSite">Read the full program</a></p>
+      </footer>
     </div>
   </div>
 
@@ -1303,7 +1418,7 @@ function powBurst(){
 /* ============ confetti (SVG bits, brand colors) ============ */
 function confetti(n){
   if(reduceMotion)return;
-  const colors=['#FF8A3D','#2D7FF0','#8C56D9','#F5B02E','#4DB271'];
+  const colors=['#F5B02E','#2D7FF0','#8C56D9','#FFD34E','#4DB271'];
   const shapes=[
     c=>`<circle cx="7" cy="7" r="6" fill="${c}"/>`,
     c=>`<rect x="2" y="2" width="10" height="10" rx="2" fill="${c}"/>`,
@@ -1510,7 +1625,7 @@ function svgShape(kind,size){
   const s=size||60;
   const m={circle:'<circle cx="30" cy="30" r="24" fill="#2D7FF0" stroke="#1B5FC4" stroke-width="3"/>',
     square:'<rect x="8" y="8" width="44" height="44" rx="2" fill="#8C56D9" stroke="#6B3AB0" stroke-width="3"/>',
-    rectangle:'<rect x="4" y="16" width="52" height="30" rx="2" fill="#FF8A3D" stroke="#E5721F" stroke-width="3"/>',
+    rectangle:'<rect x="4" y="16" width="52" height="30" rx="2" fill="#F5B02E" stroke="#C68A0E" stroke-width="3"/>',
     triangle:'<polygon points="30,6 55,52 5,52" fill="#4DB271" stroke="#37935A" stroke-width="3"/>',
     rtriangle:'<polygon points="8,8 8,52 52,52" fill="#4DB271" stroke="#37935A" stroke-width="3"/>',
     hexagon:'<polygon points="30,4 52,17 52,43 30,56 8,43 8,17" fill="#F5B02E" stroke="#D4941A" stroke-width="3"/>',
@@ -12364,6 +12479,7 @@ function parentSetGrade(g){
 function renderParent(){
   const st=$('statList');
   let rows='';
+  const SEC=[];
   const t=todayStr();
   /* On-device-only counters: the analytics substitute. Everything here is
      computed live from data already stored in this browser; nothing is
@@ -12380,7 +12496,7 @@ function renderParent(){
       const k=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');
       wkM+=S.playLog[k]||0;if(S.history&&S.history[k])wkQ+=S.history[k].a||0;
     }
-    rows+=`<div style="font-weight:800;margin:0 0 6px;font-size:15px">At a glance</div>
+    rows+=`
     <div class="pcgrid">
       <div class="pcell"><b>${dk.length}</b><span>days practiced</span></div>
       <div class="pcell"><b>${mins}</b><span>minutes trained</span></div>
@@ -12395,6 +12511,7 @@ function renderParent(){
     rows+=`<div class="pstat"><span style="font-size:12px;color:var(--ink2)">This week: ${wkM} minutes and ${wkQ} questions. Counted on this device only. Nothing is ever sent anywhere.</span><b></b></div>`;
     if(S.mg&&S.mg.a)rows+=`<div class="pstat"><span>Mind Gym puzzles (ability-test formats)</span><b>${S.mg.r}/${S.mg.a} right</b></div>`;
   }
+  SEC.push(['Today at a glance',rows,1]);rows='';
   rows+=`<div class="pstat"><span>Test date</span><b><input type="date" class="gmini" style="font:700 13px system-ui;padding:6px 8px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)" value="${S.testDate||''}" onchange="parentSetTestDate(this.value)"></b></div>`;
   if(S.testDate){
     const dleft=Math.ceil((new Date(S.testDate+'T12:00:00')-new Date())/864e5);
@@ -12409,15 +12526,16 @@ function renderParent(){
   rows+=`<div class="pstat"><span>Which test are you preparing for?</span><b>${Object.keys(TEST_MODES).map(k=>
     `<button class="gmini${testMode()===k?' on':''}" onclick="parentSetTestMode('${k}')">${TEST_MODES[k].name}</button>`).join('')}</b></div>`;
   rows+=`<div class="pstat"><span style="font-size:12px;color:var(--ink2)">${TEST_MODES[testMode()].note} This changes the Mind Gym mix only; the worlds keep following the grade. <span style="opacity:.75">${TEST_MODE_DISCLAIMER}</span></span><b></b></div>`;
+  SEC.push(['Test preparation',rows,0]);rows='';
   {
     const wk=weekStats(),ed=domainEdges();
-    rows+=`<div style="font-weight:800;margin:12px 0 2px;font-size:15px">This week's hero report</div>`;
     rows+=`<div class="pstat"><span style="font-size:13px;line-height:1.55;color:var(--ink2)">${weekNarrative(wk,ed)}</span><b></b></div>`;
     if((S.mocks||[]).length){
       const last=S.mocks[S.mocks.length-1];
       rows+=`<div class="pstat"><span>Last rehearsal (${last.d})</span><b>${last.got}/${last.tot} in ${last.mins} min</b></div>`;
     }
   }
+  SEC.push(["This week's report",rows,0]);rows='';
   rows+=`<div class="pstat"><span>Student</span><b>${esc(S.player||'Not set')}</b></div>`;
   const pgd=gradeDef();
   rows+=`<div class="pstat"><span>Class and grade</span><b>${esc(pgd.cls)}, ${pgd.label.toLowerCase()}</b></div>`;
@@ -12435,6 +12553,7 @@ function renderParent(){
     }
   }
   rows+=`<div class="pstat"><span style="font-size:12px;color:var(--ink2)">Changing the grade changes every question to that grade's level. Stars, streaks and coins stay.</span><b></b></div>`;
+  SEC.push(['Student and settings',rows,0]);rows='';
   rows+=`<div class="pstat"><span>Today’s play time</span><b>${S.playLog[t]||0} min</b></div>`;
   rows+=`<div class="pstat"><span>Days in a row</span><b>${S.streakDays}</b></div>`;
   const days=Object.keys(S.history||{}).sort();
@@ -12485,21 +12604,53 @@ function renderParent(){
       rows+=`<div class="pstat"><span>${k}</span><b>${d.r}/${d.a} right</b></div>`;
     });
   }
+  SEC.push(['Progress detail',rows,0]);rows='';
   const nProf=Object.keys(ROOT.profiles||{}).length||1;
-  const tools=`<div style="font-weight:800;margin:14px 0 2px;font-size:15px">Test day tools</div>
-    <p class="subtle" style="font-size:12px;margin:0 0 6px">A rehearsal runs ${mockTotal()} questions in three parts with no answers shown until the end, the way the real sitting feels.</p>
-    <button class="btn btn-primary" id="mockBtn" style="width:100%;margin-bottom:8px">Start Mock Test Day</button>
-    <div style="font-weight:800;margin:12px 0 2px;font-size:15px">Print</div>
-    <p class="subtle" style="font-size:12px;margin:0 0 4px">Packs are generated fresh every time, with an answer key on the last page. Choose your printer, or save as PDF.</p>
-    <div class="ptools">
-      ${Object.keys(PACK_KINDS).map(k=>`<button data-pack="${k}">${PACK_KINDS[k].name}</button>`).join('')}
-      <button data-report="week">Weekly hero report</button>
-      <button data-report="school">Group report${nProf>1?' ('+nProf+')':''}</button>
-    </div>`;
-  st.innerHTML=(rows||'<p class="parent-note">No rounds played yet.</p>')+tools+
-    '<button class="btn btn-quiet" id="renameBtn" style="margin-top:12px">Switch student or add a new one</button>';
+  SEC.push(['Test day tools',
+    `<p class="psec-hint">A rehearsal runs ${mockTotal()} questions in three parts, drawn from every format your chosen test uses, with no answers shown until the end. That is the part practice cannot teach.</p>
+     <button class="btn btn-primary" id="mockBtn" style="width:100%">Start Mock Test Day</button>`,0]);
+  SEC.push(['Print packs and reports',
+    `<p class="psec-hint">Every pack is generated fresh, with an answer key on the last page. Choose a printer, or save as PDF.</p>
+     <div class="ptools">
+       ${Object.keys(PACK_KINDS).map(k=>`<button data-pack="${k}">${PACK_KINDS[k].name}</button>`).join('')}
+       <button data-report="week">Weekly hero report</button>
+       <button data-report="school">Group report${nProf>1?' ('+nProf+')':''}</button>
+     </div>`,0]);
+  SEC.push(['Devices',
+    `<p class="psec-hint">Move a hero between a phone, a tablet and a laptop. Export writes a small file you can AirDrop, email or drop in a cloud folder; importing it on the other device <b>merges</b> the two records rather than replacing either, so days trained on both devices all count.</p>
+     <div class="ptools">
+       <button id="expOne">Export ${esc(S.player||'this hero')}</button>
+       <button id="expAll">Export all ${nProf} student${nProf===1?'':'s'}</button>
+       <button id="impBtn">Import a .hero file</button>
+       <button id="impInfo">What gets merged?</button>
+     </div>
+     <input type="file" id="impFile" accept=".hero,application/json" style="display:none">
+     <p class="psec-hint" id="syncMsg" style="margin:10px 0 0"></p>`,0]);
+  SEC.push(['The program, in full',
+    `<p class="psec-hint">The complete write-up of how The Gifted League is built, what it trains, and the standards behind every world.</p>
+     <div class="ptools">
+       <button onclick="window.open('site/index.html','_blank')">The program</button>
+       <button onclick="window.open('site/academy.html','_blank')">Dr Sam&#8217;s Academy</button>
+       <button onclick="window.open('site/about.html','_blank')">About Dr Sam</button>
+       <button onclick="window.open('privacy.html','_blank')">Privacy</button>
+     </div>`,0]);
+  st.innerHTML=SEC.filter(x=>x[1]&&x[1].trim()).map(x=>
+    `<details class="psec"${x[2]?' open':''}><summary>${x[0]}</summary><div class="psec-b">${x[1]}</div></details>`).join('')+
+    '<button class="btn btn-quiet" id="renameBtn" style="margin-top:10px">Switch student or add a new one</button>';
   $('renameBtn').onclick=()=>{save();renderNameScreen();show('scr-name');};
   const mb=$('mockBtn');if(mb)mb.onclick=()=>mockStart();
+  const eo=$('expOne');if(eo)eo.onclick=()=>heroExport(false);
+  const ea=$('expAll');if(ea)ea.onclick=()=>heroExport(true);
+  const ib=$('impBtn');if(ib)ib.onclick=()=>$('impFile').click();
+  const ii=$('impInfo');if(ii)ii.onclick=()=>{
+    $('syncMsg').innerHTML='Merging keeps the <b>union</b> of every day trained, and the better of every counter: stars, levels, crowns, cards, streaks, Mind Gym and rehearsals. Nothing is lost from either device, and no number is double counted. Grade, voice and test date come from whichever file was exported most recently.';
+  };
+  const inp=$('impFile');
+  if(inp)inp.onchange=e=>{
+    const f=e.target.files&&e.target.files[0];
+    if(f)heroImport(f);
+    e.target.value='';
+  };
   st.querySelectorAll('[data-pack]').forEach(b=>b.onclick=()=>printPack(b.getAttribute('data-pack')));
   st.querySelectorAll('[data-report]').forEach(b=>b.onclick=()=>{
     b.getAttribute('data-report')==='week'?printWeekly():printSchool();
@@ -12507,14 +12658,15 @@ function renderParent(){
   let planRows='';
   if(!PLANS.pilot){
     const T=PLANS.tiers;
-    planRows=`<h3><svg class="icon"><use href="#i-shield"/></svg>Plans</h3>
+    planRows=`
     <p><strong>${T.free.name}, $0:</strong> ${T.free.blurb}</p>
     <p><strong>${T.pro.name}, $${T.pro.priceMonthly}/month or $${T.pro.priceYearly}/year:</strong> ${T.pro.blurb}</p>
     <p><strong>${T.advanced.name}, $${T.advanced.priceMonthly}/month or $${T.advanced.priceYearly}/year:</strong> ${T.advanced.blurb}</p>
     <p><strong>${T.enterprise.name}, $${T.enterprise.perStudentYearly} per student per year:</strong> ${T.enterprise.blurb}</p>`;
   }
-  $('parentInfo').innerHTML=planRows+`
-    <h3><svg class="icon"><use href="#i-shield"/></svg>About this practice</h3>
+  $('parentInfo').innerHTML=
+    (planRows?`<details class="psec"><summary>Plans</summary><div class="psec-b">${planRows}</div></details>`:'')+
+    `<details class="psec"><summary>How this practice is built</summary><div class="psec-b">
     <p><strong>The Gifted League, in brief:</strong> more than ten thousand questions written and
     reviewed against grade standards, kindergarten through fifth grade. Six grade ladders, so every
     question, timer and challenge follows the grade you pick. Everything is read aloud, so early
@@ -12533,7 +12685,7 @@ function renderParent(){
     <div class="weekplan"><p><strong>Week 3: Super Mix daily.</strong> Practice the habit that matters most on test day: listen, think, then tap. The practice worlds are never timed, so there is no reward for rushing. The Grand Prix does put a clock on the later laps, and that is deliberate and separate: it builds tolerance for answering under mild pressure, which is what a timed screener actually feels like. If the clock stresses him, stay in the practice worlds.</p></div>
     <p><strong>Healthy limits are built in:</strong> a stretch break every third round, and a wind-down screen after about 25 minutes of play. For young children, two short sessions beat one long one, and sleep the night before a test beats everything.</p>
     <p><strong>The Grand Prix gate is deliberately demanding:</strong> the daily chest plus at least 50 questions answered and 30 correct that day. That guarantees a real practice volume before the reward race, and the race itself climbs across its four laps, ending at second-grade math and third-grade reading.</p>
-    <p><strong>Privacy:</strong> this app is a single file that runs entirely in the browser. It makes no network requests of any kind, there is no account, no analytics, and no telemetry. Every score, card, and history entry is stored only in this browser on this device, and clearing the browser data for this site erases it. Nothing about your child leaves the device.</p><p>Progress saves on this device, separately for each student. Use the switch button above to move between students or add a new one. Each student keeps their own stars, cards, levels, and day-by-day history. The Grown-ups tab opens with a press-and-hold so little fingers stay in the game.</p>`;
+    <p><strong>Privacy:</strong> this app is a single file that runs entirely in the browser. It makes no network requests of any kind, there is no account, no analytics, and no telemetry. Every score, card, and history entry is stored only in this browser on this device, and clearing the browser data for this site erases it. Nothing about your child leaves the device.</p><p>Progress saves on this device, separately for each student. Use the switch button above to move between students or add a new one. Each student keeps their own stars, cards, levels, and day-by-day history. The Grown-ups tab opens with a press-and-hold so little fingers stay in the game.</p></div></details>`;
 }
 
 
@@ -12543,9 +12695,9 @@ function renderParent(){
    by grade. This trains the FORMATS ability tests use, for familiarity
    and calm; it does not claim to raise a true ability score. */
 function mgStarPts(R){let p='';for(let i=0;i<10;i++){const r=i%2?R*0.45:R;const a=-Math.PI/2+i*Math.PI/5;p+=(i?'L':'M')+(r*Math.cos(a)).toFixed(1)+' '+(r*Math.sin(a)).toFixed(1);}return p+'Z';}
-function mgFigSVG(f,px){
-  px=px||70;
-  const fill=f.fill?'#2F6BFF':'#FFFFFF', st='#17233B';
+function mgFigSVG(f,px,pal){
+  px=px||70;pal=pal||{};
+  const fill=f.fill?(pal.on||'#2F6BFF'):(pal.off||'#FFFFFF'), st=pal.line||'#17233B';
   const n=Math.min(4,f.count||1), base=34*(f.size||1)*(n>1?(n>=4?0.42:0.55):1);
   let inner='';
   for(let i=0;i<n;i++){
@@ -12953,6 +13105,45 @@ $('mgOpen').onclick=mgStart;
 $('mgQuit').onclick=()=>{hushed();sfx.tap();renderHome();show('scr-home');};
 $('mgSay').onclick=()=>{if(GYM&&GYM.q)speak(GYM.q.say);};
 
+/* ============ the front door's live question ============
+   Not a mockup: mgMatrixQ is the same generator the Mind Gym runs. The
+   parent watches a real item build and resolve, which argues the product
+   better than any screenshot of it could. */
+let LAND_T=[];
+function landStop(){LAND_T.forEach(clearTimeout);LAND_T=[];}
+function landDemo(){
+  const stage=document.getElementById('landDemo');
+  if(!stage)return;
+  landStop();
+  const PAL={on:'#5A8CFF',off:'#0D1730',line:'#F4F7FF'};
+  const calm=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const fresh=mgMatrixQ(2);
+  stage.innerHTML=
+    '<p class="lg-q">'+fresh.text+'</p>'+
+    '<div class="lg-matrix">'+
+      '<div class="lg-cell" id="lgA"></div><div class="lg-cell" id="lgB"></div>'+
+      '<div class="lg-cell" id="lgC"></div><div class="lg-cell ask" id="lgD">?</div>'+
+    '</div>'+
+    '<div class="lg-opts" id="lgOpts"></div>';
+  /* pull the four option figures straight from the generated item */
+  const opts=fresh.choices.map(c=>String(c.label));
+  const recolor=svg=>svg.replace(/fill="#2F6BFF"/g,'fill="#5A8CFF"')
+    .replace(/fill="#FFFFFF"/g,'fill="#0D1730"').replace(/stroke="#17233B"/g,'stroke="#F4F7FF"');
+  const mtx=(String(fresh.visual).match(/<svg[\s\S]*?<\/svg>/g)||[]).map(recolor);
+  const at=(id,html,cls)=>{const el=document.getElementById(id);if(el){el.innerHTML=html;if(cls)el.className=cls;}};
+  const box=document.getElementById('lgOpts');
+  box.innerHTML=opts.map((o,i)=>'<div class="lg-opt" id="lgO'+i+'">'+recolor(o)+'</div>').join('');
+  const step=(ms,fn)=>LAND_T.push(setTimeout(fn,calm?Math.min(ms,60):ms));
+  if(mtx.length>=3){
+    at('lgA','<span class="lg-fade">'+mtx[0]+'</span>');
+    step(360,()=>at('lgB','<span class="lg-fade">'+mtx[1]+'</span>'));
+    step(720,()=>at('lgC','<span class="lg-fade">'+mtx[2]+'</span>'));
+  }
+  step(2200,()=>{const el=document.getElementById('lgO'+fresh.key);if(el)el.classList.add('on');});
+  step(2900,()=>at('lgD','<span class="lg-fade">'+recolor(opts[fresh.key])+'</span>','lg-cell solved'));
+  step(calm?9e6:6400,()=>{if(document.body.classList.contains('landing-on'))landDemo();});
+}
+
 /* ============ printing: packs and reports ============ */
 const PW_CSS='font-family:Georgia,serif;color:#000;line-height:1.45;';
 function pwHead(title,sub){
@@ -13105,21 +13296,161 @@ function printSchool(){
   doPrint(b);
 }
 
+/* ============ moving a hero between devices ============
+   No server, no account, no telemetry: a hero travels as a small file the
+   family owns. Import merges, so training done on two devices adds up
+   instead of one overwriting the other. */
+const HERO_V=1;
+function heroBlob(name,obj){
+  try{
+    const url=URL.createObjectURL(new Blob([JSON.stringify(obj)],{type:'application/json'}));
+    const a=document.createElement('a');
+    a.href=url;a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},400);
+    return true;
+  }catch(e){return false;}
+}
+function heroExport(all){
+  save();
+  const profiles={};
+  if(all){Object.keys(ROOT.profiles||{}).forEach(k=>profiles[k]=ROOT.profiles[k]);}
+  if(S.player)profiles[S.player]=S;
+  const names=Object.keys(profiles);
+  if(!names.length){$('syncMsg').textContent='There is no hero to export yet.';return;}
+  const safe=(all?'gifted-league-'+names.length+'-students':String(names[0]).replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'-gifted-league');
+  const ok=heroBlob(safe+'.hero',{app:'The Gifted League',v:HERO_V,exported:new Date().toISOString(),profiles});
+  $('syncMsg').innerHTML=ok
+    ?`Saved <b>${esc(safe)}.hero</b> to your downloads. Send it to the other device, open The Gifted League there, and use Import.`
+    :'This browser blocked the download. Try again from the browser tab rather than an installed shortcut.';
+}
+function mergeNum(a,b){return Math.max(a||0,b||0);}
+function mergeMap(a,b,f){
+  const out=Object.assign({},a||{});
+  Object.keys(b||{}).forEach(k=>{out[k]=(k in out)?f(out[k],b[k]):b[k];});
+  return out;
+}
+function mergeProfile(mine,theirs,theirsNewer){
+  const out=Object.assign(freshState(),mine||{});
+  const T=theirs||{};
+  /* history and play minutes: the union, taking the fuller record per day,
+     never the sum, because the same day can appear in both files */
+  out.history=mergeMap(out.history,T.history,(a,b)=>((b.a||0)>(a.a||0)?b:a));
+  out.playLog=mergeMap(out.playLog,T.playLog,(a,b)=>Math.max(a||0,b||0));
+  ['stars','levels','crowns'].forEach(k=>{out[k]=mergeMap(out[k],T[k],mergeNum);});
+  ['perWorld'].forEach(k=>{
+    out[k]=mergeMap(out[k],T[k],(a,b)=>{
+      const o=Object.assign({},a);
+      Object.keys(b||{}).forEach(L=>{
+        o[L]=o[L]?{a:mergeNum(o[L].a,b[L].a),r:mergeNum(o[L].r,b[L].r)}:b[L];
+      });
+      return o;
+    });
+  });
+  out.perDomain=mergeMap(out.perDomain,T.perDomain,(a,b)=>({a:mergeNum(a.a,b.a),r:mergeNum(a.r,b.r)}));
+  out.ladder=mergeMap(out.ladder,T.ladder,mergeNum);
+  ['cards','badges'].forEach(k=>{out[k]=Object.assign({},out[k]||{},T[k]||{});});
+  out.unlockedAv=[...new Set((out.unlockedAv||[]).concat(T.unlockedAv||[]))];
+  ['coins','xp','bestStreak','streakDays','gpRuns'].forEach(k=>{out[k]=mergeNum(out[k],T[k]);});
+  out.mg={a:mergeNum((out.mg||{}).a,(T.mg||{}).a),r:mergeNum((out.mg||{}).r,(T.mg||{}).r)};
+  const seen={},mocks=[];
+  (out.mocks||[]).concat(T.mocks||[]).forEach(m=>{
+    const k=[m.d,m.got,m.tot,m.mins].join('|');
+    if(!seen[k]){seen[k]=1;mocks.push(m);}
+  });
+  out.mocks=mocks.sort((a,b)=>String(a.d).localeCompare(String(b.d))).slice(-10);
+  if(out.mg.a===0)delete out.mg;
+  /* preferences follow whichever file was written last */
+  if(theirsNewer){
+    ['grade','avatar','rate','voiceName','tmode','testDate','lastPlay','shieldWeek'].forEach(k=>{
+      if(T[k]!==undefined&&T[k]!=='')out[k]=T[k];
+    });
+  }
+  out.player=out.player||T.player;
+  return out;
+}
+function heroImport(file){
+  const msg=$('syncMsg');
+  const rd=new FileReader();
+  rd.onerror=()=>{msg.textContent='That file could not be read. Try exporting it again.';};
+  rd.onload=()=>{
+    let d=null;
+    try{d=JSON.parse(rd.result);}catch(e){}
+    if(!d||!d.profiles||typeof d.profiles!=='object'){
+      msg.textContent='That is not a Gifted League hero file. Look for a file ending in .hero';
+      return;
+    }
+    if((d.v||1)>HERO_V){
+      msg.textContent='That file was made by a newer version of the app. Update this device first.';
+      return;
+    }
+    const theirsNewer=!ROOT.stamp||String(d.exported||'')>String(ROOT.stamp||'');
+    const names=Object.keys(d.profiles);
+    let added=0,merged=0;
+    names.forEach(nm=>{
+      const inc=d.profiles[nm];
+      if(!inc||typeof inc!=='object')return;
+      if(ROOT.profiles[nm]){
+        ROOT.profiles[nm]=mergeProfile(ROOT.profiles[nm],inc,theirsNewer);
+        merged++;
+      }else{
+        ROOT.profiles[nm]=Object.assign(freshState(),inc,{player:nm});
+        added++;
+      }
+      if(S.player===nm)S=Object.assign(freshState(),ROOT.profiles[nm]);
+    });
+    ROOT.stamp=new Date().toISOString();
+    try{localStorage.setItem(ROOT_KEY,JSON.stringify(ROOT));}catch(e){}
+    save();
+    renderParent();refreshTopbar();
+    const m=$('syncMsg');
+    if(m)m.innerHTML=`Done. <b>${merged}</b> hero${merged===1?'':'es'} merged`+
+      (added?` and <b>${added}</b> new one${added===1?'':'s'} added`:'')+
+      `. Every day trained on both devices now counts once.`;
+  };
+  rd.readAsText(file);
+}
+
 /* ============ Mock Test Day ============ */
-const MOCK_PLAN=[
-  {id:'v',name:'Part 1: Word Reasoning',n:5,
-   say:'Part one: word reasoning. Listen to each one, then pick the best answer.'},
-  {id:'q',name:'Part 2: Number Reasoning',n:5,
-   say:'Part two: number reasoning. Take your time and think it through.'},
-  {id:'n',name:'Part 3: Picture Reasoning',n:6,
-   say:'Part three: picture reasoning. Look carefully at every picture.'}
-];
+/* Each battery gets its own paper. `k` is the draw pool for a section:
+   Mind Gym format keys plus 'math' and 'read', which pull live items from
+   the app's own worlds so achievement and reasoning sit side by side. */
+const MOCK_SETS={
+  all:[
+    {n:'Word Reasoning',k:['vb','vb','read'],c:4,say:'Part one: word reasoning. Listen to each one, then pick the best answer.'},
+    {n:'Number Reasoning',k:['num','num','math'],c:4,say:'Part two: number reasoning. Take your time and think it through.'},
+    {n:'Picture Reasoning',k:['mx','ser','odd','fold'],c:5,say:'Part three: picture reasoning. Look carefully at every picture.'},
+    {n:'What You Know',k:['math','read'],c:3,say:'Last part: what you know. These are the questions you train on every day.'}
+  ],
+  cogat:[
+    {n:'Verbal Battery',k:['vb','vb','read'],c:5,say:'Verbal battery. Listen to each one, then pick the best answer.'},
+    {n:'Quantitative Battery',k:['num','num','math'],c:5,say:'Quantitative battery. Take your time and think it through.'},
+    {n:'Nonverbal Battery',k:['mx','ser','odd','fold'],c:6,say:'Nonverbal battery. Look carefully at every picture.'}
+  ],
+  olsat:[
+    {n:'Verbal Reasoning',k:['vb','vb','vb','read'],c:6,say:'Verbal reasoning. Listen closely, then pick the best answer.'},
+    {n:'Figural Reasoning',k:['mx','ser','odd'],c:5,say:'Figural reasoning. Find the rule the pictures follow.'},
+    {n:'Quantitative Reasoning',k:['num','num','math'],c:5,say:'Quantitative reasoning. Think about how the numbers change.'}
+  ],
+  nnat:[
+    {n:'Pattern Completion',k:['mx','odd'],c:6,say:'Pattern completion. Find the piece that finishes the pattern.'},
+    {n:'Serial Reasoning',k:['ser'],c:5,say:'Serial reasoning. Work out what comes next.'},
+    {n:'Spatial Visualization',k:['fold','fold','mx'],c:5,say:'Spatial visualization. Picture the paper opening back up.'}
+  ]
+};
+function mockPlan(){
+  /* a fresh draw order every sitting, so no two rehearsals repeat */
+  return (MOCK_SETS[testMode()]||MOCK_SETS.all).map(sec=>{
+    const draw=[];
+    for(let i=0;i<sec.c;i++)draw.push(sec.k[i%sec.k.length]);
+    return {name:sec.n,n:sec.c,say:sec.say,draw:shuffle(draw)};
+  });
+}
 let MK=null;
-function mockWorldQ(sub){
+function mockWorldQ(sub,bump){
   try{
     const pool=WORLDS.filter(x=>x.sub===sub);
     const w=pool[rint(0,pool.length-1)];
-    const L=Math.max(1,Math.min(maxLvlFor(w),(S.levels&&S.levels[w.id])||1));
+    const L=Math.max(1,Math.min(maxLvlFor(w),((S.levels&&S.levels[w.id])||1)+(bump||0)));
     const Q=freshQ(L2=>w.gen(L2),L,()=>genOps(1));
     if(!Q||!Q.choices)return null;
     const k=Q.choices.findIndex(c=>c.correct);
@@ -13130,13 +13461,18 @@ function mockWorldQ(sub){
   }catch(e){return null;}
 }
 function mockQ(sec,i,g){
-  if(sec==='v')return (i%2===1&&mockWorldQ('read'))||mgVerbalQ(g);
-  if(sec==='q')return (i%2===1&&mockWorldQ('math'))||mgNumQ(g);
-  return mgMake(['mx','ser','odd','fold','mx','ser'][i%6],g);
+  /* the last two items of every section reach a step above the child's
+     ladder, which is how a real battery ramps */
+  const late=i>=sec.n-2?1:0;
+  const ty=sec.draw[i%sec.draw.length];
+  if(ty==='read')return mockWorldQ('read',late)||mgVerbalQ(g);
+  if(ty==='math')return mockWorldQ('math',late)||mgNumQ(g);
+  return mgMake(ty,Math.min(5,g+late));
 }
 function mockStart(){
   S.mocks=S.mocks||[];
-  MK={s:0,i:0,n:0,t0:Date.now(),scores:MOCK_PLAN.map(()=>0),phase:'brief'};
+  const plan=mockPlan();
+  MK={s:0,i:0,n:0,t0:Date.now(),plan,scores:plan.map(()=>0),phase:'brief',mode:testMode()};
   /* a rehearsal gets a clean anti-repeat memory, so no item repeats inside it */
   GYM={i:0,r:0,used:{},types:[]};
   hushed();sfx.tap();show('scr-mock');mockBrief();
@@ -13148,15 +13484,18 @@ function mockClock(){
   const t=Math.floor((Date.now()-MK.t0)/1000);
   el.textContent=Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
 }
-function mockTotal(){return MOCK_PLAN.reduce((a,p)=>a+p.n,0);}
+function mockTotal(){
+  return ((MK&&MK.plan)||MOCK_SETS[testMode()]||MOCK_SETS.all)
+    .reduce((a,p)=>a+(p.n||p.c||0),0);
+}
 function mockBrief(){
   MK.phase='brief';
   $('mkCount').textContent='Mock Test Day';
-  $('mkSection').textContent='Before we start';
+  $('mkSection').textContent=TEST_MODES[MK.mode].name+' rehearsal';
   $('mkText').innerHTML='Take one big breath in, and let it out slowly.';
   $('mkVisual').innerHTML='<div style="text-align:center">'+mascotSVG('idle',120)+'</div>'+
     '<p class="subtle" style="text-align:left;font-size:14px;line-height:1.6;margin:10px 2px 0">'+
-    'This is a practice run of test day. There are '+mockTotal()+' questions in three parts. '+
+    'This is a practice run of test day. There are '+mockTotal()+' questions in '+MK.plan.length+' parts. '+
     'I will read each one to you. Nobody tells you the answers until the very end, just like the real test. '+
     'There is no rush and no timer that can run out. If you are not sure, pick your best guess and keep going.</p>';
   $('mkChoices').innerHTML='';
@@ -13165,10 +13504,10 @@ function mockBrief(){
   b.className='btn btn-primary';b.textContent="I'm ready";
   b.onclick=()=>{sfx.tap();MK.t0=Date.now();mockSection();};
   row.appendChild(b);
-  speak("Mock test day. Take one big breath in, and let it out slowly. There are "+mockTotal()+" questions in three parts. I will read each one to you. Nobody tells you the answers until the very end, just like the real test. There is no rush, and no timer can run out. If you are not sure, pick your best guess and keep going.");
+  speak("Mock test day. Take one big breath in, and let it out slowly. There are "+mockTotal()+" questions in "+MK.plan.length+" parts. I will read each one to you. Nobody tells you the answers until the very end, just like the real test. There is no rush, and no timer can run out. If you are not sure, pick your best guess and keep going.");
 }
 function mockSection(){
-  const p=MOCK_PLAN[MK.s];
+  const p=MK.plan[MK.s];
   MK.phase='intro';MK.st0=Date.now();
   $('mkCount').textContent='Question '+(MK.n+1)+' of '+mockTotal();
   $('mkSection').textContent=p.name;
@@ -13177,21 +13516,21 @@ function mockSection(){
   $('mkChoices').innerHTML='';
   const row=$('mkAction');row.innerHTML='';
   const b=document.createElement('button');
-  b.className='btn btn-primary';b.textContent='Start '+p.name.split(':')[0].toLowerCase();
+  b.className='btn btn-primary';b.textContent='Start '+p.name.toLowerCase();
   b.onclick=()=>{sfx.tap();mockNext();};
   row.appendChild(b);
   speak(p.say);
 }
 function mockNext(){
-  const p=MOCK_PLAN[MK.s];
+  const p=MK.plan[MK.s];
   if(MK.i>=p.n){
     MK.s++;MK.i=0;
-    if(MK.s>=MOCK_PLAN.length){mockFinish();return;}
+    if(MK.s>=MK.plan.length){mockFinish();return;}
     mockSection();return;
   }
   const g=curGrade();
   let q=null,tries=0;
-  while(!q&&tries++<6)q=mockQ(p.id,MK.i,g);
+  while(!q&&tries++<6)q=mockQ(p,MK.i,g);
   if(!q)q=mgMake('mx',g);
   MK.q=q;MK.phase='ask';
   $('mkCount').textContent='Question '+(MK.n+1)+' of '+mockTotal();
@@ -13228,15 +13567,16 @@ function mockFinish(){
   const mins=Math.max(1,Math.round((Date.now()-MK.t0)/60000));
   const got=MK.scores.reduce((a,b)=>a+b,0),tot=mockTotal();
   const pct=Math.round(got/tot*100);
-  S.mocks=(S.mocks||[]).concat([{d:todayStr(),pct,got,tot,mins}]).slice(-10);
+  S.mocks=(S.mocks||[]).concat([{d:todayStr(),pct,got,tot,mins,mode:MK.mode}]).slice(-10);
   save();
   MK.phase='done';
   $('mkCount').textContent='Rehearsal complete';
   $('mkClock').textContent='';
-  $('mkSection').textContent='How it went';
+  $('mkSection').textContent='How it went &middot; '+TEST_MODES[MK.mode].name;
+  $('mkSection').innerHTML='How it went &middot; '+TEST_MODES[MK.mode].name;
   $('mkText').innerHTML='You finished all '+tot+' questions: <b>'+got+' right</b>.';
-  const rows=MOCK_PLAN.map((p,i)=>
-    '<div class="pstat"><span>'+p.name.replace(/^Part \d+: /,'')+'</span><b>'+MK.scores[i]+'/'+p.n+'</b></div>').join('');
+  const rows=MK.plan.map((p,i)=>
+    '<div class="pstat"><span>'+p.name+'</span><b>'+MK.scores[i]+'/'+p.n+'</b></div>').join('');
   const note=pct>=85?'Sitting comfortably above the range most gifted screeners use for the achievement criterion. Keep the habit, and keep test day boring.'
     :pct>=70?'A strong rehearsal. The formats are familiar; steady daily training is what moves the last stretch.'
     :pct>=50?'A solid working rehearsal. Look at the weakest part above and spend the next two weeks there.'
@@ -13340,7 +13680,7 @@ sfx.dings=()=>{[1047,1319,1568,2093,2637].forEach((f,i)=>tone(f,i*.11,.34,'sine'
 sfx.megaFanfare=()=>{[523,659,784,1047,784,1047,1319,1568,2093].forEach((f,i)=>tone(f,i*.13,.22,'triangle',.17));};
 function fireworks(n){
   if(reduceMotion)return;
-  const colors=['#FFD34E','#FF6B6B','#7FE7FF','#8C56D9','#22C55E','#FF8A3D'];
+  const colors=['#FFD34E','#FF6B6B','#7FE7FF','#8C56D9','#22C55E','#F5B02E'];
   for(let i=0;i<(n||6);i++){
     setTimeout(()=>{
       const d=document.createElement('div');
@@ -13806,22 +14146,11 @@ refreshTopbar();
 if(!S.player&&!Object.keys(ROOT.profiles).length){
   /* brand-new family: the parent-facing front door first, silent on purpose,
      with the game chrome hidden until a hero exists */
-  $('landMascot').innerHTML=mascotSVG('cheer',130);
   document.body.classList.add('landing-on');
-  try{
-    $('landDemo').innerHTML=
-      '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;text-align:left;box-shadow:var(--shadow)">'+
-      '<div style="font:700 11px system-ui;color:#2F6BFF">Number City · step 2 of 3</div>'+
-      '<div style="height:5px;background:#E4ECFA;border-radius:3px;margin:8px 0"><div style="width:62%;height:5px;background:var(--gold);border-radius:3px"></div></div>'+
-      '<div style="font:800 16px system-ui;color:var(--ink);margin:4px 0 8px">Which fraction is greater, 5/8 or 1/2? '+
-      '<svg viewBox="0 0 24 24" style="width:15px;height:15px;vertical-align:-2px;fill:#2F6BFF"><path d="M4 9v6h4l5 4V5L8 9H4z"/></svg></div>'+
-      fracBarSVG(5,8)+
-      '<div style="display:flex;gap:8px;margin-top:10px">'+
-      ['5/8','1/2','They are equal'].map(function(x){return '<span style="flex:1;text-align:center;border:1.6px solid var(--line);border-radius:10px;padding:8px 4px;font:700 13px system-ui;color:var(--ink)">'+x+'</span>';}).join('')+
-      '</div></div>';
-  }catch(e){}
+  landDemo();
   var landStart=function(){
     sfx.tap();
+    landStop();
     document.body.classList.remove('landing-on');
     refreshTopbar();
     renderNameScreen();show('scr-name');
