@@ -198,10 +198,10 @@ section:last-of-type{border-bottom:none;}
   color:var(--gold);margin:26px 0 0;display:flex;align-items:center;gap:10px;
 }
 .hallmark .sig::before{content:'';width:26px;height:1px;background:var(--gold);flex:none;}
-.hallmark.with-photo{display:grid;grid-template-columns:1fr 250px;gap:34px;align-items:end;}
-.hallmark.with-photo .hall-copy{min-width:0;}
-.hallmark.with-photo .figure{margin-bottom:-42px;}
-.hallmark.with-photo .figure img{max-width:250px;}
+.hallmark .hall-fig{float:right;width:300px;margin:-4px -4px 6px 34px;
+  shape-outside:circle(50%);shape-margin:18px;}
+.hallmark .hall-fig img{width:100%;height:auto;}
+.hallmark .sig{clear:both;}
 
 /* ---------- footer ---------- */
 footer.site{padding:52px 0 64px;border-top:1px solid var(--line-soft);background:var(--ink-2);}
@@ -233,9 +233,7 @@ footer.site .fine{
 @media (max-width:860px){
   .hero-split{grid-template-columns:1fr;gap:26px;}
   .hero-split .figure img{max-width:330px;}
-  .hallmark.with-photo{grid-template-columns:1fr;gap:18px;}
-  .hallmark.with-photo .figure{margin-bottom:-30px;justify-content:flex-start;}
-  .hallmark.with-photo .figure img{max-width:210px;}
+  .hallmark .hall-fig{width:210px;margin-left:22px;}
   .g3,.g4{grid-template-columns:repeat(2,1fr);}
   .stats{grid-template-columns:repeat(2,1fr);}
   footer.site .cols{grid-template-columns:1fr 1fr;}
@@ -243,6 +241,7 @@ footer.site .fine{
 @media (max-width:620px){
   body{font-size:16px;}
   .hallmark{padding:30px 22px;}
+  .hallmark .hall-fig{width:150px;margin-left:18px;}
   .hero{padding:60px 0 48px;}
   section{padding:56px 0;}
   .g2,.g3,.g4{grid-template-columns:1fr;}
