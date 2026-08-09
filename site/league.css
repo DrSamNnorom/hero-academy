@@ -161,6 +161,48 @@ section:last-of-type{border-bottom:none;}
 .spec .cell.q{border-style:dashed;border-color:var(--blue);color:var(--blue);font:800 26px var(--mono);}
 .spec .arrow{color:var(--muted-2);font-size:19px;}
 
+/* ---------- portraits ----------
+   No frame and no border: the cutout has no edge, so a bloom behind the
+   figure is what makes it feel placed rather than pasted. */
+.figure{position:relative;display:flex;justify-content:center;align-items:flex-end;}
+.figure::before{
+  content:'';position:absolute;left:50%;bottom:8%;width:84%;padding-bottom:84%;
+  transform:translateX(-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(90,140,255,.26) 0%,rgba(90,140,255,.07) 45%,rgba(90,140,255,0) 70%);
+}
+.figure img{position:relative;display:block;width:100%;height:auto;}
+.hero-split{display:grid;grid-template-columns:1.1fr .9fr;gap:44px;align-items:end;}
+.hero-split .figure img{max-width:430px;margin-inline:auto;}
+.hero-split .hero-copy{padding-bottom:14px;}
+
+/* ---------- the hallmark ----------
+   One statement, one treatment, repeated across every surface. */
+.hallmark{
+  position:relative;border:1px solid var(--line);border-radius:18px;
+  background:linear-gradient(158deg,#101D40 0%,#0A1229 62%);
+  padding:42px 36px;overflow:hidden;
+}
+.hallmark::after{
+  content:'';position:absolute;right:-70px;top:-70px;width:220px;height:220px;
+  border:1px solid rgba(90,140,255,.14);border-radius:26px;transform:rotate(24deg);
+}
+.hallmark .crest{width:34px;height:34px;display:block;margin-bottom:22px;}
+.hallmark .line{
+  font:900 clamp(26px,4vw,40px)/1.16 var(--sans);letter-spacing:-.035em;color:var(--paper);
+  margin:0 0 22px;max-width:19ch;
+}
+.hallmark .line em{font-style:normal;color:var(--gold);}
+.hallmark p{font-size:16px;line-height:1.65;max-width:52ch;margin:0 0 16px;}
+.hallmark .sig{
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold);margin:26px 0 0;display:flex;align-items:center;gap:10px;
+}
+.hallmark .sig::before{content:'';width:26px;height:1px;background:var(--gold);flex:none;}
+.hallmark.with-photo{display:grid;grid-template-columns:1fr 250px;gap:34px;align-items:end;}
+.hallmark.with-photo .hall-copy{min-width:0;}
+.hallmark.with-photo .figure{margin-bottom:-42px;}
+.hallmark.with-photo .figure img{max-width:250px;}
+
 /* ---------- footer ---------- */
 footer.site{padding:52px 0 64px;border-top:1px solid var(--line-soft);background:var(--ink-2);}
 footer.site .cols{display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px;}
@@ -189,12 +231,18 @@ footer.site .fine{
 
 /* ---------- responsive ---------- */
 @media (max-width:860px){
+  .hero-split{grid-template-columns:1fr;gap:26px;}
+  .hero-split .figure img{max-width:330px;}
+  .hallmark.with-photo{grid-template-columns:1fr;gap:18px;}
+  .hallmark.with-photo .figure{margin-bottom:-30px;justify-content:flex-start;}
+  .hallmark.with-photo .figure img{max-width:210px;}
   .g3,.g4{grid-template-columns:repeat(2,1fr);}
   .stats{grid-template-columns:repeat(2,1fr);}
   footer.site .cols{grid-template-columns:1fr 1fr;}
 }
 @media (max-width:620px){
   body{font-size:16px;}
+  .hallmark{padding:30px 22px;}
   .hero{padding:60px 0 48px;}
   section{padding:56px 0;}
   .g2,.g3,.g4{grid-template-columns:1fr;}
