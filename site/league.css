@@ -252,3 +252,37 @@ footer.site .fine{
   .nav a:not(.btn-sm){display:none;}
   footer.site .cols{grid-template-columns:1fr;}
 }
+
+/* ===== photo cards: photographs presented as photographs ===== */
+.photo-card{position:relative;display:block;max-width:100%;transform:rotate(-2.5deg);
+  border:12px solid #F4F7FF;border-radius:18px;background:#F4F7FF;
+  box-shadow:0 1px 2px rgba(0,0,0,.5),0 16px 40px rgba(0,0,0,.45),0 40px 90px -20px #000,
+    inset 0 1px 0 rgba(244,247,255,.25);}
+.photo-card img{display:block;width:100%;height:auto;border-radius:6px;
+  -webkit-mask-image:none !important;mask-image:none !important;}
+.photo-card::after{content:'';position:absolute;inset:-5px;border-radius:22px;
+  outline:1px solid rgba(233,180,76,.35);pointer-events:none;}
+.photo-stage{position:relative;}
+.photo-stage::before{content:'';position:absolute;left:50%;top:50%;width:160%;padding-bottom:160%;
+  transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(233,180,76,.16) 0%,rgba(90,140,255,.10) 40%,rgba(90,140,255,0) 68%);}
+.photo-stage .photo-card{position:relative;z-index:1;}
+.window-card{position:relative;overflow:hidden;border-radius:20px;
+  border:1px solid rgba(244,247,255,.14);
+  box-shadow:0 1px 2px rgba(0,0,0,.5),0 16px 40px rgba(0,0,0,.4),0 40px 90px -20px #000;}
+.window-card img{display:block;width:100%;height:auto;
+  -webkit-mask-image:none !important;mask-image:none !important;}
+.window-card::after{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,rgba(233,180,76,0),rgba(233,180,76,.55),rgba(233,180,76,0));}
+
+.hall-fig.photo-stage{padding-left:40px;padding-bottom:12px;}
+
+/* illustrated heroes carry their own stage; give them room to breathe */
+.figure img.cut{-webkit-mask-image:none !important;mask-image:none !important;}
+.stagelift img{max-width:470px;margin-inline:auto;}
+.hall-fig img[src$='heroes.svg']{transform:none;}
+
+/* landscape photo cards earn a wider column */
+.hallmark .hall-fig.photo-stage{width:380px;}
+@media (max-width:900px){ .hallmark .hall-fig.photo-stage{width:300px;} }
+@media (max-width:640px){ .hallmark .hall-fig.photo-stage{float:none;width:100%;margin:10px 0 18px;} }
